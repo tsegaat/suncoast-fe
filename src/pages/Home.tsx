@@ -121,6 +121,9 @@ export default function Tasks() {
                                                 variant="contained"
                                                 color="primary"
                                                 className="w-full md:w-auto"
+                                                onClick={() =>
+                                                    handleCompleteTask(task.id)
+                                                }
                                             >
                                                 Mark as Complete
                                             </Button>
@@ -195,7 +198,7 @@ export default function Tasks() {
                                             }
                                             className="w-full md:w-auto"
                                         >
-                                            Add to My Tasks
+                                            Append to My Tasks
                                         </Button>
                                     </li>
                                 ))}
