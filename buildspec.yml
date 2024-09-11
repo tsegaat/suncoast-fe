@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+    install:
+        runtime-versions:
+            nodejs: 18
+        commands:
+            - echo Installing dependencies...
+            - npm install
+
+    pre_build:
+        commands:
+            - echo Running pre-build actions...
+
+    build:
+        commands:
+            - echo Build started on `date`
+            - npm run build
+
+    post_build:
+        commands:
+            - echo Build completed on `date`
+            - echo Uploading build artifacts to S3...
+            - aws s3 sync build/ s3://suncoast-fe-static-site/ --delete
+
+cache:
+    paths:
+        - "node_modules/**/*"
