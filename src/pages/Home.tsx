@@ -198,7 +198,7 @@ export default function Tasks() {
                                             }
                                             className="w-full md:w-auto"
                                         >
-                                            Append to My Tasks
+                                            Add to My Tasks
                                         </Button>
                                     </li>
                                 ))}
