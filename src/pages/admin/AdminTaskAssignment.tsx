@@ -14,7 +14,7 @@ const AdminTaskAssignment = () => {
     const [newTask, setNewTask] = useState("");
     const [selectedUser, setSelectedUser] = useState("");
     const [greeting, setGreeting] = useState("");
-    const [companyName] = useState("Acme Corp"); // Mock company name
+    const [companyName] = useState("Suncoast");
     const [users] = useState([
         "Assign to Pool",
         "Alice",

@@ -57,7 +57,7 @@ export default function CompanyDetailsForm() {
     };
 
     return (
-        <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
+        <div className="bg-white px-6 py-24 sm:py-32 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                     Register Your Company
@@ -322,7 +322,7 @@ export default function CompanyDetailsForm() {
 
                 {/* Agree to Terms */}
                 <div className="sm:col-span-2 mt-6">
-                    <Switch.Group as="div" className="flex items-center">
+                    <div className="flex items-center">
                         <Switch
                             checked={agreed}
                             onChange={setAgreed}
@@ -338,10 +338,10 @@ export default function CompanyDetailsForm() {
                                 )}
                             />
                         </Switch>
-                        <Switch.Label className="ml-3 text-sm text-gray-900">
+                        <label className="ml-3 text-sm text-gray-900">
                             I agree to the terms and conditions
-                        </Switch.Label>
-                    </Switch.Group>
+                        </label>
+                    </div>
                 </div>
 
                 {/* Submit Button */}

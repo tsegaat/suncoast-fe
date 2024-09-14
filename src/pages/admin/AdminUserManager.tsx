@@ -65,7 +65,7 @@ export default function AdminUserManager() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [greeting, setGreeting] = useState("");
-    const [companyName] = useState("Acme Corp");
+    const [companyName] = useState("Suncoast");
 
     useEffect(() => {
         const currentHour = new Date().getHours();
