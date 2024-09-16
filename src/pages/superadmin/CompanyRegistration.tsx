@@ -6,18 +6,83 @@ import { classNames } from "../../utils/helper";
 export default function CompanyDetailsForm() {
     const [agreed, setAgreed] = useState(false);
     const [companyName, setCompanyName] = useState("");
-    const [industry, setIndustry] = useState("");
-    const [companySize, setCompanySize] = useState("");
-    const [description, setDescription] = useState("");
     const [logo, setLogo] = useState<File | null>(null);
     const [locations, setLocations] = useState([
-        { street: "", city: "", state: "", zipcode: "" },
+        { name: "", street: "", city: "", state: "", zipcode: "" },
     ]);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    // Function to fetch location suggestions based on company name using Google Places API
+    const fetchSuggestions = async (name: string) => {
+        try {
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${name}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
+            );
+            const data = await response.json();
+            if (data.predictions) {
+                setSuggestions(data.predictions);
+                setShowDropdown(true);
+            }
+        } catch (error) {
+            console.error("Error fetching location suggestions:", error);
+        }
+    };
+
+    const fetchPlaceDetails = async (placeId: string) => {
+        try {
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address&key=YOUR_GOOGLE_API_KEY`
+            );
+            const data = await response.json();
+
+            if (data.result) {
+                const formattedAddress = data.result.formatted_address;
+                const [street, cityStateZip] = formattedAddress.split(", ");
+                const [city, stateZip] = cityStateZip.split(" ");
+                const [state, zipcode] = stateZip
+                    ? stateZip.split(" ")
+                    : ["", ""];
+
+                setLocations([
+                    {
+                        name: data.result.name || "Headquarters", // Populate name from result or default
+                        street: street || "",
+                        city: city || "",
+                        state: state || "",
+                        zipcode: zipcode || "",
+                    },
+                ]);
+                setShowDropdown(false);
+            }
+        } catch (error) {
+            console.error("Error fetching place details:", error);
+        }
+    };
+
+    const handleCompanyNameChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const name = e.target.value;
+        setCompanyName(name);
+
+        if (name.length > 2) {
+            fetchSuggestions(name);
+        } else {
+            setSuggestions([]);
+            setShowDropdown(false);
+        }
+    };
+
+    const handleSuggestionClick = (suggestion: any) => {
+        setCompanyName(suggestion.description);
+        fetchPlaceDetails(suggestion.place_id);
+    };
 
     const handleAddLocation = () => {
         setLocations([
             ...locations,
-            { street: "", city: "", state: "", zipcode: "" },
+            { name: "", street: "", city: "", state: "", zipcode: "" },
         ]);
     };
 
@@ -39,15 +104,20 @@ export default function CompanyDetailsForm() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log({
-            companyName,
-            industry,
-            companySize,
-            description,
-            logo,
-            locations,
+
+        const formattedLocations = locations.map((location) => ({
+            name: location.name || "Headquarters", // Default to "Headquarters" if no name is provided
+            address: `${location.street}, ${location.city}, ${location.state} ${location.zipcode}`,
+        }));
+
+        const formData = {
+            name: companyName,
+            locations: formattedLocations,
             agreed,
-        });
+        };
+
+        console.log(formData);
+        // Submit formData to your backend
     };
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,92 +139,39 @@ export default function CompanyDetailsForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-xl">
-                {/* Company Name */}
-                <div className="sm:col-span-2 mb-6">
+                {/* Company Name with Autocomplete Dropdown */}
+                <div className="sm:col-span-2 mb-6 relative">
                     <label
                         htmlFor="company-name"
                         className="block text-sm font-medium text-gray-700"
                     >
                         Company Name
                     </label>
-                    <div className="mt-1">
+                    <div className="mt-1 relative">
                         <input
                             type="text"
                             name="company-name"
                             id="company-name"
                             required
                             value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
+                            onChange={handleCompanyNameChange}
                             className="block w-full p-2 rounded-md border border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-md"
                         />
-                    </div>
-                </div>
-
-                {/* Industry */}
-                <div className="sm:col-span-2 mb-6">
-                    <label
-                        htmlFor="industry"
-                        className="block text-sm font-medium text-gray-700"
-                    >
-                        Industry
-                    </label>
-                    <div className="mt-1">
-                        <input
-                            type="text"
-                            name="industry"
-                            id="industry"
-                            required
-                            value={industry}
-                            onChange={(e) => setIndustry(e.target.value)}
-                            className="block w-full p-2 rounded-md border border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-md"
-                        />
-                    </div>
-                </div>
-
-                {/* Company Size */}
-                <div className="sm:col-span-2 mb-6">
-                    <label
-                        htmlFor="company-size"
-                        className="block text-sm font-medium text-gray-700"
-                    >
-                        Company Size
-                    </label>
-                    <div className="mt-1">
-                        <select
-                            name="company-size"
-                            id="company-size"
-                            required
-                            value={companySize}
-                            onChange={(e) => setCompanySize(e.target.value)}
-                            className="block w-full p-2 rounded-md border border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-md"
-                        >
-                            <option value="">Select size</option>
-                            <option value="1-10">1-10 employees</option>
-                            <option value="11-50">11-50 employees</option>
-                            <option value="51-200">51-200 employees</option>
-                            <option value="201-500">201-500 employees</option>
-                            <option value="500+">500+ employees</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Company Description */}
-                <div className="sm:col-span-2 mb-6">
-                    <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700"
-                    >
-                        Company Description
-                    </label>
-                    <div className="mt-1">
-                        <textarea
-                            name="description"
-                            id="description"
-                            required
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="block w-full p-2 rounded-md border border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-md"
-                        />
+                        {showDropdown && (
+                            <ul className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                {suggestions.map((suggestion, index) => (
+                                    <li
+                                        key={index}
+                                        className="cursor-pointer p-2 hover:bg-blue-500 hover:text-white"
+                                        onClick={() =>
+                                            handleSuggestionClick(suggestion)
+                                        }
+                                    >
+                                        {suggestion.description}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </div>
 
@@ -165,6 +182,30 @@ export default function CompanyDetailsForm() {
                             Location {index + 1}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                            <div>
+                                <label
+                                    htmlFor={`location-name-${index}`}
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Location Name
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        type="text"
+                                        id={`location-name-${index}`}
+                                        value={location.name}
+                                        onChange={(e) =>
+                                            handleLocationChange(
+                                                index,
+                                                "name",
+                                                e.target.value
+                                            )
+                                        }
+                                        className="block w-full p-2 rounded-md border border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-md"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
                                 <label
                                     htmlFor={`street-${index}`}
