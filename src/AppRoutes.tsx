@@ -11,14 +11,11 @@ const AppRoutes = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<UserTaskManager />} />
                 <Route path="/company" element={<CompanyDashboard />} />
                 <Route
                     path="/company/register"
                     element={<CompanyRegistration />}
                 />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/users" element={<AdminUserManager />} />
             </Routes>
         </Router>
     );

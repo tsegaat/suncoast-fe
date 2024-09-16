@@ -34,22 +34,6 @@ export default function Tasks() {
     const [companyName] = useState("Suncoast");
 
     useEffect(() => {
-        const payload = {
-            company_data: {
-                name: "Suncoast",
-                location: [
-                    { name: "San Diego", address: "123 Main St." },
-                    { name: "Los Angeles", address: "456 Main St." },
-                ],
-            },
-        };
-        fetch("https://vu6pxmvaxa.execute-api.us-east-1.amazonaws.com/", {
-            method: "POST",
-            body: JSON.stringify(payload),
-        }).then((response) => console.log(response.json()));
-    }, []);
-
-    useEffect(() => {
         const currentHour = new Date().getHours();
         if (currentHour < 12) {
             setGreeting("Good morning");
