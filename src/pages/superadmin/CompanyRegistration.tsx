@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { PlusCircleIcon, MinusCircleIcon } from "@heroicons/react/20/solid";
-import { Switch } from "@headlessui/react";
-import { classNames } from "../../utils/helper";
+import { useNavigate } from "react-router-dom";
+import { createCompany } from "../../accessors/AscendHealthAccessor";
 
 export default function CompanyDetailsForm() {
-    const [agreed, setAgreed] = useState(false);
+    const navigate = useNavigate();
     const [companyName, setCompanyName] = useState("");
     const [logo, setLogo] = useState<File | null>(null);
     const [locations, setLocations] = useState([
@@ -12,21 +12,26 @@ export default function CompanyDetailsForm() {
     ]);
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [notification, setNotification] = useState<{
+        message: string;
+        type: "success" | "error";
+    } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Function to fetch location suggestions based on company name using Google Places API
     const fetchSuggestions = async (name: string) => {
-        try {
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${name}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
-            );
-            const data = await response.json();
-            if (data.predictions) {
-                setSuggestions(data.predictions);
-                setShowDropdown(true);
-            }
-        } catch (error) {
-            console.error("Error fetching location suggestions:", error);
-        }
+        // try {
+        //     const response = await fetch(
+        //         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${name}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
+        //     );
+        //     const data = await response.json();
+        //     if (data.predictions) {
+        //         setSuggestions(data.predictions);
+        //         setShowDropdown(true);
+        //     }
+        // } catch (error) {
+        //     console.error("Error fetching location suggestions:", error);
+        // }
     };
 
     const fetchPlaceDetails = async (placeId: string) => {
@@ -102,22 +107,44 @@ export default function CompanyDetailsForm() {
         setLocations(newLocations);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
 
         const formattedLocations = locations.map((location) => ({
-            name: location.name || "Headquarters", // Default to "Headquarters" if no name is provided
+            name: location.name,
             address: `${location.street}, ${location.city}, ${location.state} ${location.zipcode}`,
         }));
 
-        const formData = {
+        const userData = {
             name: companyName,
             locations: formattedLocations,
-            agreed,
         };
 
-        console.log(formData);
-        // Submit formData to your backend
+        try {
+            const response = await createCompany(userData);
+            if (response.status === 200) {
+                setNotification({
+                    message: "Company created successfully!",
+                    type: "success",
+                });
+                navigate("/companies");
+                // Reset form or redirect here if needed
+            } else {
+                setNotification({
+                    message: "Failed to create company. Please try again.",
+                    type: "error",
+                });
+            }
+        } catch (error) {
+            console.error("Error creating company:", error);
+            setNotification({
+                message: "An error occurred. Please try again later.",
+                type: "error",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +164,18 @@ export default function CompanyDetailsForm() {
                     profile.
                 </p>
             </div>
+
+            {notification && (
+                <div
+                    className={`fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-md ${
+                        notification.type === "success"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                    }`}
+                >
+                    {notification.message}
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-xl">
                 {/* Company Name with Autocomplete Dropdown */}
@@ -361,37 +400,40 @@ export default function CompanyDetailsForm() {
                     )}
                 </div>
 
-                {/* Agree to Terms */}
-                <div className="sm:col-span-2 mt-6">
-                    <div className="flex items-center">
-                        <Switch
-                            checked={agreed}
-                            onChange={setAgreed}
-                            className={classNames(
-                                agreed ? "bg-blue-600" : "bg-gray-200",
-                                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            )}
-                        >
-                            <span
-                                className={classNames(
-                                    agreed ? "translate-x-6" : "translate-x-1",
-                                    "inline-block h-4 w-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out"
-                                )}
-                            />
-                        </Switch>
-                        <label className="ml-3 text-sm text-gray-900">
-                            I agree to the terms and conditions
-                        </label>
-                    </div>
-                </div>
-
                 {/* Submit Button */}
                 <div className="mt-8">
                     <button
                         type="submit"
-                        className="w-full rounded-md bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        disabled={isLoading}
+                        className="w-full rounded-md bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Submit
+                        {isLoading ? (
+                            <>
+                                <svg
+                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Processing...
+                            </>
+                        ) : (
+                            "Register Company"
+                        )}
                     </button>
                 </div>
             </form>
