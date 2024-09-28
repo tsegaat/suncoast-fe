@@ -60,7 +60,7 @@ const NewUserLogin: React.FC = () => {
         try {
             // Send both temporary password and new password in a single request
             const loginResponse = await loginUser({
-                username,
+                username: username.toLowerCase(),
                 password: tempPassword,
                 new_password: newPassword,
             });
