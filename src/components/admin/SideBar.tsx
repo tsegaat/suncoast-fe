@@ -1,27 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowDownRightIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { getLocation } from "../../accessors/AscendHealthAccessor";
 import Cookies from "js-cookie";
 
 interface Location {
     id: number;
     name: string;
-    address: string;
 }
-
-// Mock function to fetch location details
-const fetchLocationDetails = async (id: number): Promise<Location> => {
-    // This is a mock implementation. Replace with actual API call.
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                id,
-                name: `Location ${id}`,
-                address: `${id} Main St, City, State 12345`,
-            });
-        }, 100);
-    });
-};
 
 export default function Sidebar() {
     const navigate = useNavigate();
@@ -33,22 +19,41 @@ export default function Sidebar() {
 
     useEffect(() => {
         const fetchLocations = async () => {
-            // const locationIds = [23, 4, 32].toString();
-            const locationIds = Cookies.get("user_location_ids");
-            if (locationIds) {
-                const ids = JSON.parse(locationIds);
-                const fetchedLocations = await Promise.all(
-                    ids.map((id: number) => fetchLocationDetails(id))
-                );
-                setLocations(fetchedLocations);
-
-                // Set the first location as default
-                if (fetchedLocations.length > 0) {
-                    setSelectedLocationId(fetchedLocations[0].id);
-                    Cookies.set(
-                        "selected_location_id",
-                        fetchedLocations[0].id.toString()
+            const locationIdsString = Cookies.get("user_location_ids");
+            if (locationIdsString) {
+                const ids = locationIdsString
+                    .split(",")
+                    .map((id) => parseInt(id, 10));
+                try {
+                    const fetchedLocations = await Promise.all(
+                        ids.map(async (id: number) => {
+                            const response = await getLocation(id);
+                            const locationName = await response.text(); // Assuming the response is plain text
+                            // Remove quotes from the location name
+                            const cleanedName = locationName.replace(
+                                /^"|"$/g,
+                                ""
+                            );
+                            return { id, name: cleanedName };
+                        })
                     );
+                    setLocations(fetchedLocations);
+
+                    // Set the first location as default if not already set
+                    const storedLocationId = Cookies.get(
+                        "selected_location_id"
+                    );
+                    if (storedLocationId) {
+                        setSelectedLocationId(parseInt(storedLocationId, 10));
+                    } else if (fetchedLocations.length > 0) {
+                        setSelectedLocationId(fetchedLocations[0].id);
+                        Cookies.set(
+                            "selected_location_id",
+                            fetchedLocations[0].id.toString()
+                        );
+                    }
+                } catch (error) {
+                    console.error("Error fetching locations:", error);
                 }
             }
         };

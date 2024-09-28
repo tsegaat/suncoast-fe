@@ -146,7 +146,7 @@ const NewUserLogin: React.FC = () => {
                             <input
                                 id="tempPassword"
                                 name="tempPassword"
-                                type="password"
+                                type="text"
                                 required
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 value={tempPassword}
@@ -166,7 +166,7 @@ const NewUserLogin: React.FC = () => {
                             <input
                                 id="newPassword"
                                 name="newPassword"
-                                type="password"
+                                type="text"
                                 required
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 value={newPassword}
@@ -184,7 +184,7 @@ const NewUserLogin: React.FC = () => {
                             <input
                                 id="confirmPassword"
                                 name="confirmPassword"
-                                type="password"
+                                type="text"
                                 required
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 value={confirmPassword}

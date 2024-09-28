@@ -2,15 +2,18 @@ import React, { useState } from "react";
 import { createUser } from "../../accessors/AscendHealthAccessor";
 import Sidebar from "../../components/admin/SideBar";
 import Cookies from "js-cookie";
+
 const AdminCreateEmployee = () => {
     const [email, setEmail] = useState("");
     const [employeeFirstName, setEmployeeFirstName] = useState("");
     const [employeeLastName, setEmployeeLastName] = useState("");
+    const [notification, setNotification] = useState({ type: "", message: "" });
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         const userCompanyId = Cookies.get("user_company_id");
-        const userId = Cookies.get("user_id");
+        const userId = Cookies.get("user_user_id");
+        const locationId = Cookies.get("selected_location_id");
 
         const response = await createUser({
             email: email,
@@ -19,13 +22,29 @@ const AdminCreateEmployee = () => {
             last_name: employeeLastName,
             company_id: userCompanyId,
             created_by: userId,
+            location_ids: [locationId],
         });
 
         if (response.ok) {
-            alert("Employee created successfully");
+            setNotification({
+                type: "success",
+                message: "Employee created successfully",
+            });
+            // Reset form fields
+            setEmail("");
+            setEmployeeFirstName("");
+            setEmployeeLastName("");
         } else {
-            alert("Failed to create employee");
+            setNotification({
+                type: "error",
+                message: "Failed to create employee",
+            });
         }
+
+        // Clear notification after 3 seconds
+        setTimeout(() => {
+            setNotification({ type: "", message: "" });
+        }, 3000);
     };
 
     return (
@@ -36,6 +55,17 @@ const AdminCreateEmployee = () => {
                     <h2 className="text-2xl font-bold mb-6">
                         Create New Employee
                     </h2>
+                    {notification.message && (
+                        <div
+                            className={`mb-4 p-4 rounded-md ${
+                                notification.type === "success"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                            }`}
+                        >
+                            {notification.message}
+                        </div>
+                    )}
                     <form
                         onSubmit={handleSubmit}
                         className="bg-white p-6 rounded shadow-md"

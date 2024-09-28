@@ -4,102 +4,51 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { CheckIcon, TrashIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { classNames } from "../../utils/helper";
 import Cookies from "js-cookie";
-import { getUser } from "../../accessors/AscendHealthAccessor";
+import {
+    getUser,
+    getTasksByUserToken,
+    updateTaskStatus,
+    getCompany,
+} from "../../accessors/AscendHealthAccessor";
 
 enum TaskPriority {
-    Low = "Low",
-    Medium = "Medium",
-    High = "High",
+    Low = 1,
+    Medium = 2,
+    High = 3,
 }
 
 enum TaskStatus {
-    Pending = "Pending",
-    InProgress = "InProgress",
-    Completed = "Completed",
+    Pending = "open",
+    InProgress = "in progress",
+    Completed = "completed",
 }
 
 interface Task {
-    id: number;
-    title: string;
+    task_id: number;
+    task_title: string;
     description?: string;
-    due_date?: Date;
+    due_date?: string;
+    is_pooled: boolean;
     priority: TaskPriority;
-    creation_timestamp: Date;
-    created_by: number;
-    status: TaskStatus;
-    completed_timestamp?: Date;
-    origin: "tasks" | "taskPool";
+    location_id: number;
+    creation_timestamp: string;
+    creation_date_by_user: string;
+    source: number;
+    status: string;
+    assigned_to: number;
+    completed_timestamp?: string;
+    edit_timestamp?: string;
 }
 
 export default function Tasks() {
     const navigate = useNavigate();
-    const [currentUser, setCurrentUser] = useState();
-    const [tasks, setTasks] = useState<Task[]>([
-        {
-            id: 1,
-            title: "Task 1",
-            description:
-                "In the realm of software development, the journey from concept to deployment is a multifaceted and intricate process that requires a blend of creativity, technical prowess, and meticulous planning. At the heart of this journey lies the codebase, a living, breathing entity that evolves over time, shaped by the hands of developers who craft its structure and functionality.",
-            due_date: new Date("2024-09-30"),
-            priority: TaskPriority.High,
-            creation_timestamp: new Date("2024-09-01T08:00:00"),
-            created_by: 1,
-            status: TaskStatus.Pending,
-            origin: "tasks",
-        },
-        {
-            id: 2,
-            title: "Task 2",
-            description: "Description of Task 2",
-            due_date: new Date("2024-10-05"),
-            priority: TaskPriority.Medium,
-            creation_timestamp: new Date("2024-09-02T09:00:00"),
-            created_by: 1,
-            status: TaskStatus.Pending,
-            origin: "tasks",
-        },
-        {
-            id: 3,
-            title: "Task 3",
-            description: "Description of Task 3",
-            due_date: new Date("2024-09-20"),
-            priority: TaskPriority.Low,
-            creation_timestamp: new Date("2024-09-03T10:00:00"),
-            created_by: 1,
-            status: TaskStatus.Completed,
-            completed_timestamp: new Date("2024-09-07T10:30:00"),
-            origin: "tasks",
-        },
-    ]);
-
-    const [taskPool, setTaskPool] = useState<Task[]>([
-        {
-            id: 4,
-            title: "Task 4 (Pool)",
-            description: "Description of Task 4",
-            due_date: new Date("2024-10-15"),
-            priority: TaskPriority.Low,
-            creation_timestamp: new Date("2024-09-04T11:00:00"),
-            created_by: 1,
-            status: TaskStatus.Pending,
-            origin: "taskPool",
-        },
-        {
-            id: 5,
-            title: "Task 5 (Pool)",
-            description: "Description of Task 5",
-            due_date: new Date("2024-11-01"),
-            priority: TaskPriority.Medium,
-            creation_timestamp: new Date("2024-09-05T12:00:00"),
-            created_by: 1,
-            status: TaskStatus.Pending,
-            origin: "taskPool",
-        },
-    ]);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [taskPool, setTaskPool] = useState<Task[]>([]);
 
     const [currentTab, setCurrentTab] = useState(0);
     const [greeting, setGreeting] = useState("");
-    const [companyName] = useState("Suncoast");
+    const [companyName, setCompanyName] = useState("");
 
     const [expandedTaskIds, setExpandedTaskIds] = useState<number[]>([]);
 
@@ -134,6 +83,17 @@ export default function Tasks() {
                             expires: 7,
                         });
                     });
+
+                    if (userData.company_id) {
+                        const companyResponse = await getCompany(
+                            userData.company_id
+                        );
+                        const companyData = await companyResponse.json();
+                        setCompanyName(companyData.name);
+                    }
+
+                    // Fetch tasks after getting user data
+                    fetchTasks();
                 } catch (error) {
                     console.error("Error fetching user data:", error);
                 }
@@ -143,47 +103,104 @@ export default function Tasks() {
         fetchUserData();
     }, []);
 
-    const handleCompleteTask = (id: number) => {
-        const dateTimeNow = new Date();
-        setTasks(
-            tasks.map((task) =>
-                task.id === id
-                    ? {
-                          ...task,
-                          status: TaskStatus.Completed,
-                          completed_timestamp: dateTimeNow,
-                      }
-                    : task
-            )
-        );
-    };
+    const fetchTasks = async () => {
+        try {
+            const response = await getTasksByUserToken();
+            let tasksData = await response.json();
+            tasksData = tasksData.tasks;
+            const pendingTasks = tasksData.filter(
+                (task: Task) =>
+                    task.status === TaskStatus.Pending ||
+                    task.status === TaskStatus.InProgress
+            );
+            const completedTasks = tasksData.filter(
+                (task: Task) => task.status === TaskStatus.Completed
+            );
+            const pooledTasks = tasksData.filter(
+                (task: Task) => task.is_pooled
+            );
 
-    const handleAddTaskFromPool = (id: number) => {
-        const taskToAdd = taskPool.find((task) => task.id === id);
-        if (taskToAdd) {
-            setTasks([...tasks, taskToAdd]);
-            setTaskPool(taskPool.filter((task) => task.id !== id));
+            setTasks([...pendingTasks, ...completedTasks]);
+            setTaskPool(pooledTasks);
+        } catch (error) {
+            console.error("Error fetching tasks:", error);
         }
     };
 
-    const handleRemoveTask = (id: number) => {
-        const taskToRemove = tasks.find((task) => task.id === id);
-        if (taskToRemove) {
-            if (taskToRemove.origin === "tasks") {
+    const handleCompleteTask = async (id: number) => {
+        const token = Cookies.get("token");
+        if (!token) {
+            console.error("No token found");
+            return;
+        }
+
+        try {
+            const response = await updateTaskStatus(id, TaskStatus.Completed);
+            if (response.ok) {
+                const dateTimeNow = new Date().toISOString();
                 setTasks(
                     tasks.map((task) =>
-                        task.id === id
+                        task.task_id === id
                             ? {
                                   ...task,
-                                  status: TaskStatus.Pending,
-                                  completed_timestamp: undefined,
+                                  status: TaskStatus.Completed,
+                                  completed_timestamp: dateTimeNow,
                               }
                             : task
                     )
                 );
-            } else if (taskToRemove.origin === "taskPool") {
-                setTaskPool([...taskPool, taskToRemove]);
-                setTasks(tasks.filter((task) => task.id !== id));
+            } else {
+                console.error("Failed to update task status");
+            }
+        } catch (error) {
+            console.error("Error updating task status:", error);
+        }
+    };
+
+    const handleAddTaskFromPool = (id: number) => {
+        const taskToAdd = taskPool.find((task) => task.task_id === id);
+        if (taskToAdd) {
+            setTasks([...tasks, { ...taskToAdd, is_pooled: false }]);
+            setTaskPool(taskPool.filter((task) => task.task_id !== id));
+        }
+    };
+
+    const handleRemoveTask = async (id: number) => {
+        const taskToRemove = tasks.find((task) => task.task_id === id);
+        if (taskToRemove) {
+            const token = Cookies.get("token");
+            if (!token) {
+                console.error("No token found");
+                return;
+            }
+
+            try {
+                const response = await updateTaskStatus(id, TaskStatus.Pending);
+                if (response.ok) {
+                    if (!taskToRemove.is_pooled) {
+                        setTasks(
+                            tasks.map((task) =>
+                                task.task_id === id
+                                    ? {
+                                          ...task,
+                                          status: TaskStatus.Pending,
+                                          completed_timestamp: undefined,
+                                      }
+                                    : task
+                            )
+                        );
+                    } else {
+                        setTaskPool([
+                            ...taskPool,
+                            { ...taskToRemove, is_pooled: true },
+                        ]);
+                        setTasks(tasks.filter((task) => task.task_id !== id));
+                    }
+                } else {
+                    console.error("Failed to update task status");
+                }
+            } catch (error) {
+                console.error("Error updating task status:", error);
             }
         }
     };
@@ -273,17 +290,17 @@ export default function Tasks() {
                                     )
                                     .map((task) => (
                                         <li
-                                            key={task.id}
+                                            key={task.task_id}
                                             className="flex flex-col justify-between items-start mb-4 p-4 bg-gray-50 rounded-md"
                                         >
                                             <div className="mb-2">
                                                 <h3 className="text-xl font-bold">
-                                                    {task.title}
+                                                    {task.task_title}
                                                 </h3>
                                                 {task.description && (
                                                     <p className="text-gray-600">
                                                         {expandedTaskIds.includes(
-                                                            task.id
+                                                            task.task_id
                                                         )
                                                             ? task.description
                                                             : `${task.description.substring(
@@ -295,13 +312,13 @@ export default function Tasks() {
                                                             <button
                                                                 onClick={() =>
                                                                     toggleDescription(
-                                                                        task.id
+                                                                        task.task_id
                                                                     )
                                                                 }
                                                                 className="text-blue-500 ml-2"
                                                             >
                                                                 {expandedTaskIds.includes(
-                                                                    task.id
+                                                                    task.task_id
                                                                 )
                                                                     ? "Less"
                                                                     : "More"}
@@ -313,7 +330,9 @@ export default function Tasks() {
                                                     {task.due_date && (
                                                         <p>
                                                             Due Date:{" "}
-                                                            {task.due_date.toLocaleDateString()}
+                                                            {new Date(
+                                                                task.due_date
+                                                            ).toLocaleDateString()}
                                                         </p>
                                                     )}
                                                     <p>
@@ -322,13 +341,17 @@ export default function Tasks() {
                                                     </p>
                                                     <p>
                                                         Created At:{" "}
-                                                        {task.creation_timestamp.toLocaleString()}
+                                                        {new Date(
+                                                            task.creation_timestamp
+                                                        ).toLocaleString()}
                                                     </p>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() =>
-                                                    handleCompleteTask(task.id)
+                                                    handleCompleteTask(
+                                                        task.task_id
+                                                    )
                                                 }
                                                 className="flex items-center bg-green-500 text-white px-3 py-1 rounded-md self-end"
                                             >
@@ -352,17 +375,17 @@ export default function Tasks() {
                                     )
                                     .map((task) => (
                                         <li
-                                            key={task.id}
+                                            key={task.task_id}
                                             className="flex flex-col justify-between items-start mb-4 p-4 bg-gray-50 rounded-md"
                                         >
                                             <div className="mb-2">
                                                 <h3 className="text-xl font-bold">
-                                                    {task.title}
+                                                    {task.task_title}
                                                 </h3>
                                                 {task.description && (
                                                     <p className="text-gray-600">
                                                         {expandedTaskIds.includes(
-                                                            task.id
+                                                            task.task_id
                                                         )
                                                             ? task.description
                                                             : `${task.description.substring(
@@ -374,13 +397,13 @@ export default function Tasks() {
                                                             <button
                                                                 onClick={() =>
                                                                     toggleDescription(
-                                                                        task.id
+                                                                        task.task_id
                                                                     )
                                                                 }
                                                                 className="text-blue-500 ml-2"
                                                             >
                                                                 {expandedTaskIds.includes(
-                                                                    task.id
+                                                                    task.task_id
                                                                 )
                                                                     ? "Less"
                                                                     : "More"}
@@ -392,7 +415,9 @@ export default function Tasks() {
                                                     {task.due_date && (
                                                         <p>
                                                             Due Date:{" "}
-                                                            {task.due_date.toLocaleDateString()}
+                                                            {new Date(
+                                                                task.due_date
+                                                            ).toLocaleDateString()}
                                                         </p>
                                                     )}
                                                     <p>
@@ -401,19 +426,25 @@ export default function Tasks() {
                                                     </p>
                                                     <p>
                                                         Created At:{" "}
-                                                        {task.creation_timestamp.toLocaleString()}
+                                                        {new Date(
+                                                            task.creation_timestamp
+                                                        ).toLocaleString()}
                                                     </p>
                                                     {task.completed_timestamp && (
                                                         <p>
                                                             Completed At:{" "}
-                                                            {task.completed_timestamp.toLocaleString()}
+                                                            {new Date(
+                                                                task.completed_timestamp
+                                                            ).toLocaleString()}
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() =>
-                                                    handleRemoveTask(task.id)
+                                                    handleRemoveTask(
+                                                        task.task_id
+                                                    )
                                                 }
                                                 className="flex items-center bg-red-500 text-white px-3 py-1 rounded-md self-end"
                                             >
@@ -432,17 +463,17 @@ export default function Tasks() {
                             <ul>
                                 {taskPool.map((task) => (
                                     <li
-                                        key={task.id}
+                                        key={task.task_id}
                                         className="flex flex-col justify-between items-start mb-4 p-4 bg-gray-50 rounded-md"
                                     >
                                         <div className="mb-2">
                                             <h3 className="text-xl font-bold">
-                                                {task.title}
+                                                {task.task_title}
                                             </h3>
                                             {task.description && (
                                                 <p className="text-gray-600">
                                                     {expandedTaskIds.includes(
-                                                        task.id
+                                                        task.task_id
                                                     )
                                                         ? task.description
                                                         : `${task.description.substring(
@@ -454,13 +485,13 @@ export default function Tasks() {
                                                         <button
                                                             onClick={() =>
                                                                 toggleDescription(
-                                                                    task.id
+                                                                    task.task_id
                                                                 )
                                                             }
                                                             className="text-blue-500 ml-2"
                                                         >
                                                             {expandedTaskIds.includes(
-                                                                task.id
+                                                                task.task_id
                                                             )
                                                                 ? "Less"
                                                                 : "More"}
@@ -472,19 +503,25 @@ export default function Tasks() {
                                                 {task.due_date && (
                                                     <p>
                                                         Due Date:{" "}
-                                                        {task.due_date.toLocaleDateString()}
+                                                        {new Date(
+                                                            task.due_date
+                                                        ).toLocaleDateString()}
                                                     </p>
                                                 )}
                                                 <p>Priority: {task.priority}</p>
                                                 <p>
                                                     Created At:{" "}
-                                                    {task.creation_timestamp.toLocaleString()}
+                                                    {new Date(
+                                                        task.creation_timestamp
+                                                    ).toLocaleString()}
                                                 </p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() =>
-                                                handleAddTaskFromPool(task.id)
+                                                handleAddTaskFromPool(
+                                                    task.task_id
+                                                )
                                             }
                                             className="flex items-center bg-blue-500 text-white px-3 py-1 rounded-md self-end"
                                         >
