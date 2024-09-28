@@ -27,6 +27,8 @@ interface Task {
 }
 
 const AdminTaskAssignment = () => {
+    const [isLoading, setIsLoading] = useState(true);
+
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [newTask, setNewTask] = useState("");
@@ -56,13 +58,13 @@ const AdminTaskAssignment = () => {
         }
 
         const fetchUserData = async () => {
+            setIsLoading(true);
             const token = Cookies.get("token");
             if (token) {
                 try {
                     const response = await getUser(undefined, token);
                     const userData = await response.json();
                     setCurrentUser(userData);
-                    console.log(userData);
                     // Store each user data field in a separate cookie
                     Object.entries(userData).forEach(
                         ([key, value]: [string, any]) => {
@@ -100,6 +102,8 @@ const AdminTaskAssignment = () => {
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
+                } finally {
+                    setIsLoading(false);
                 }
             }
         };
@@ -152,6 +156,14 @@ const AdminTaskAssignment = () => {
             setErrorMessage("Please fill in all required fields");
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 flex">

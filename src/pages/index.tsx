@@ -49,7 +49,10 @@ const Login: React.FC = () => {
         setIsLoading(true);
         setMessage({ type: "", text: "" });
         try {
-            const response = await loginUser({ username, password });
+            const response = await loginUser({
+                username: username.toLowerCase(),
+                password,
+            });
             if (response.ok) {
                 const data = await response.json();
                 Cookies.set("token", data.access_token);

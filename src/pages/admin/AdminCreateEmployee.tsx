@@ -18,7 +18,7 @@ const AdminCreateEmployee = () => {
         const locationId = Cookies.get("selected_location_id");
 
         const response = await createEmployee({
-            email: email,
+            email: email.toLowerCase(),
             role: "employee",
             first_name: employeeFirstName,
             last_name: employeeLastName,
