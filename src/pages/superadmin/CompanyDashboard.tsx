@@ -67,9 +67,7 @@ export default function SuperAdminPage() {
 
     const handleLocationSelect = (location: Location) => {
         if (selectedCompany) {
-            navigate(
-                `/company/${selectedCompany.company_id}/location/${location.location_id}`
-            );
+            navigate("/admin");
         }
         setIsModalOpen(false);
     };

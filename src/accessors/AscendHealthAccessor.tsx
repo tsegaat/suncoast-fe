@@ -1,7 +1,7 @@
 import LoginRequest from "../types/services/LoginRequest";
 import { getCookie } from "../utils/helper";
 
-export function createUser(userData: any) {
+export function createEmployee(userData: any) {
     const authToken = getCookie("token");
 
     return fetch(

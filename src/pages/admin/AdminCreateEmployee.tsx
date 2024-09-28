@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createUser } from "../../accessors/AscendHealthAccessor";
+import { createEmployee } from "../../accessors/AscendHealthAccessor";
 import Sidebar from "../../components/admin/SideBar";
 import Cookies from "js-cookie";
 
@@ -8,14 +8,16 @@ const AdminCreateEmployee = () => {
     const [employeeFirstName, setEmployeeFirstName] = useState("");
     const [employeeLastName, setEmployeeLastName] = useState("");
     const [notification, setNotification] = useState({ type: "", message: "" });
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        setIsLoading(true);
         const userCompanyId = Cookies.get("user_company_id");
         const userId = Cookies.get("user_user_id");
         const locationId = Cookies.get("selected_location_id");
 
-        const response = await createUser({
+        const response = await createEmployee({
             email: email,
             role: "employee",
             first_name: employeeFirstName,
@@ -40,6 +42,7 @@ const AdminCreateEmployee = () => {
                 message: "Failed to create employee",
             });
         }
+        setIsLoading(false);
 
         // Clear notification after 3 seconds
         setTimeout(() => {
@@ -124,8 +127,29 @@ const AdminCreateEmployee = () => {
                         </div>
                         <button
                             type="submit"
-                            className="mt-4 w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            disabled={isLoading}
                         >
+                            {isLoading ? (
+                                <svg
+                                    className="animate-spin h-5 w-5 mr-3 text-white"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                            ) : null}
                             Create Employee
                         </button>
                     </form>

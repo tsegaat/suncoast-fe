@@ -17,7 +17,10 @@ export function AdminPrivateRoutes() {
             try {
                 const response = await getUser(undefined, token);
                 const userData = await response.json();
-                setIsAdmin(userData?.role === "admin");
+                setIsAdmin(
+                    userData?.role === "admin" ||
+                        userData?.role === "super_admin"
+                );
             } catch (error) {
                 console.error("Error fetching user data:", error);
                 setIsAdmin(false);
