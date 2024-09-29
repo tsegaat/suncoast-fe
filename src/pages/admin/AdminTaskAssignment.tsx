@@ -6,6 +6,7 @@ import {
     getUser,
     getUsersByLocation,
     createTask,
+    getCompany,
 } from "../../accessors/AscendHealthAccessor";
 
 // Define TaskPriority and User types
@@ -39,7 +40,7 @@ const AdminTaskAssignment = () => {
     const [locationId, setLocationId] = useState<number>(0);
     const [selectedEmployee, setSelectedEmployee] = useState<any>();
     const [greeting, setGreeting] = useState("");
-    const [companyName] = useState("Suncoast");
+    const [companyName, setCompanyName] = useState("");
     const [employees, setEmployees] = useState<any[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [confirmationMessage, setConfirmationMessage] = useState<
@@ -65,6 +66,15 @@ const AdminTaskAssignment = () => {
                     const response = await getUser(undefined, token);
                     const userData = await response.json();
                     setCurrentUser(userData);
+
+                    if (userData.company_id) {
+                        const companyResponse = await getCompany(
+                            userData.company_id
+                        );
+                        const companyData = await companyResponse.json();
+                        setCompanyName(companyData.name);
+                    }
+
                     // Store each user data field in a separate cookie
                     Object.entries(userData).forEach(
                         ([key, value]: [string, any]) => {
