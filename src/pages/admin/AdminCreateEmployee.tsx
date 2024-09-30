@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { createEmployee } from "../../accessors/AscendHealthAccessor";
+import React, { useState, useEffect } from "react";
+import {
+    createEmployee,
+    getCompany,
+} from "../../accessors/AscendHealthAccessor";
 import Sidebar from "../../components/admin/SideBar";
 import Cookies from "js-cookie";
 
@@ -9,6 +12,26 @@ const AdminCreateEmployee = () => {
     const [employeeLastName, setEmployeeLastName] = useState("");
     const [notification, setNotification] = useState({ type: "", message: "" });
     const [isLoading, setIsLoading] = useState(false);
+    const [companyName, setCompanyName] = useState("");
+
+    useEffect(() => {
+        const fetchCompanyData = async () => {
+            const userCompanyId = Cookies.get("user_company_id");
+            if (userCompanyId) {
+                try {
+                    const companyResponse = await getCompany(
+                        parseInt(userCompanyId)
+                    );
+                    const companyData = await companyResponse.json();
+                    setCompanyName(companyData.name);
+                } catch (error) {
+                    console.error("Error fetching company data:", error);
+                }
+            }
+        };
+
+        fetchCompanyData();
+    }, []);
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -55,9 +78,14 @@ const AdminCreateEmployee = () => {
             <Sidebar />
             <div className="flex-1 p-8">
                 <div className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold mb-6">
+                    <h2 className="text-2xl font-bold mb-2">
                         Create New Employee
                     </h2>
+                    {companyName && (
+                        <p className="text-lg text-gray-600 mb-6">
+                            {companyName}
+                        </p>
+                    )}
                     {notification.message && (
                         <div
                             className={`mb-4 p-4 rounded-md ${

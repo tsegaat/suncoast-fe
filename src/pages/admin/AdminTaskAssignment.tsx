@@ -204,10 +204,17 @@ const AdminTaskAssignment = () => {
                         </div>
                     )}
 
-                    <div className="flex flex-col space-y-4">
+                    <div className="flex flex-col space-y-3">
+                        <label
+                            htmlFor="taskTitle"
+                            className="font-medium text-gray-700"
+                        >
+                            Task Title
+                        </label>
                         <input
+                            id="taskTitle"
                             type="text"
-                            placeholder="Task Title"
+                            placeholder="Enter task title"
                             value={newTask}
                             onChange={(e) => setNewTask(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -216,21 +223,43 @@ const AdminTaskAssignment = () => {
                             maxLength={200}
                         />
 
+                        <label
+                            htmlFor="taskDescription"
+                            className="font-medium text-gray-700"
+                        >
+                            Task Description
+                        </label>
                         <textarea
-                            placeholder="Task Description"
+                            id="taskDescription"
+                            placeholder="Enter task description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-lg"
                         />
 
+                        <label
+                            htmlFor="dueDate"
+                            className="font-medium text-gray-700"
+                        >
+                            Due Date
+                        </label>
                         <input
+                            id="dueDate"
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
+                            min={new Date().toISOString().split("T")[0]}
                             className="w-full p-3 border border-gray-300 rounded-lg"
                         />
 
+                        <label
+                            htmlFor="priority"
+                            className="font-medium text-gray-700"
+                        >
+                            Priority
+                        </label>
                         <select
+                            id="priority"
                             value={priority}
                             onChange={(e) =>
                                 setPriority(
@@ -256,32 +285,45 @@ const AdminTaskAssignment = () => {
                                 }}
                                 className="form-checkbox"
                             />
-                            <span className="ml-2">Pool Task</span>
+                            <span className="ml-2 font-medium text-gray-700">
+                                Pool Task
+                            </span>
                         </label>
 
                         {!isPooled && (
-                            <select
-                                value={selectedEmployee?.["user_id"] || ""}
-                                onChange={(e) => {
-                                    const employee = employees.find(
-                                        (employee) =>
-                                            employee["user_id"] ===
-                                            parseInt(e.target.value)
-                                    );
-                                    setSelectedEmployee(employee);
-                                }}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                            >
-                                <option value="">Select an employee</option>
-                                {employees.map((employee) => (
-                                    <option
-                                        key={employee["user_id"]}
-                                        value={employee["user_id"]}
-                                    >
-                                        {employee["first_name"]}
-                                    </option>
-                                ))}
-                            </select>
+                            <>
+                                <label
+                                    htmlFor="employee"
+                                    className="font-medium text-gray-700"
+                                >
+                                    Assign to Employee
+                                </label>
+                                <select
+                                    id="employee"
+                                    value={selectedEmployee?.["user_id"] || ""}
+                                    onChange={(e) => {
+                                        const employee = employees.find(
+                                            (employee) =>
+                                                employee["user_id"] ===
+                                                parseInt(e.target.value)
+                                        );
+                                        setSelectedEmployee(employee);
+                                    }}
+                                    className="w-full p-3 border border-gray-300 rounded-lg"
+                                >
+                                    <option value="">Select an employee</option>
+                                    {employees.map((employee) => (
+                                        <option
+                                            key={employee["user_id"]}
+                                            value={employee["user_id"]}
+                                        >
+                                            {employee["first_name"] +
+                                                " " +
+                                                employee["last_name"]}
+                                        </option>
+                                    ))}
+                                </select>
+                            </>
                         )}
 
                         <button
