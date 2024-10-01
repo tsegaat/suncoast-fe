@@ -19,7 +19,17 @@ interface User {
     name: string;
 }
 
-export default function AdminUserManager() {
+export default function AdminUserManager({
+    companyId,
+    locationId,
+    employees,
+    currentUser,
+}: {
+    companyId: number;
+    locationId: number;
+    employees: any[];
+    currentUser: any;
+}) {
     const [tasks, setTasks] = useState<Task[]>([
         {
             id: 1,
@@ -115,9 +125,6 @@ export default function AdminUserManager() {
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-            {/* Sidebar */}
-            <Sidebar />
-
             {/* Main Content Area */}
             <div className="flex-1 p-8">
                 <div className="mb-6 text-center">
@@ -137,11 +144,11 @@ export default function AdminUserManager() {
                             placeholder="Enter User Name"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                         <button
                             onClick={handleSearch}
-                            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto"
+                            className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto"
                         >
                             <PlusIcon className="h-5 w-5 mr-1" />
                             Search

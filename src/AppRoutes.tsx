@@ -2,11 +2,9 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import EmployeeTaskManager from "./pages/employee/EmployeeTaskManager";
-import AdminDashboard from "./pages/admin/AdminTaskAssignment";
-import AdminUserManager from "./pages/admin/AdminUserManager";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import CompanyRegistration from "./pages/superadmin/CompanyRegistration";
 import CompanyDashboard from "./pages/superadmin/CompanyDashboard";
-import AdminCreateEmployee from "./pages/admin/AdminCreateEmployee";
 import NewUserLogin from "./pages/NewUserLogin";
 import {
     AdminPrivateRoutes,
@@ -22,11 +20,9 @@ const AppRoutes = () => {
                 <Route path="/" element={<Login />} />
                 <Route path="/new-user" element={<NewUserLogin />} />
                 <Route element={<AdminPrivateRoutes />}>
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/users" element={<AdminUserManager />} />
                     <Route
-                        path="/admin/create"
-                        element={<AdminCreateEmployee />}
+                        path="/admin/:companyId/:locationId"
+                        element={<AdminDashboard />}
                     />
                 </Route>
                 <Route element={<SuperAdminPrivateRoutes />}>

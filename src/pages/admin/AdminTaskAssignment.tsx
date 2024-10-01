@@ -1,363 +1,250 @@
-import { useState, useEffect } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid";
-import Sidebar from "../../components/admin/SideBar";
-import Cookies from "js-cookie";
-import {
-    getUser,
-    getUsersByLocation,
-    createTask,
-    getCompany,
-} from "../../accessors/AscendHealthAccessor";
+import React, { useState } from "react";
+import { createTask } from "../../accessors/AscendHealthAccessor";
 
-// Define TaskPriority and User types
 enum TaskPriority {
     LOW = 1,
     MEDIUM = 2,
     HIGH = 3,
 }
 
-interface Task {
-    task_title: string;
-    description?: string;
-    due_date?: string;
-    is_pooled: boolean;
-    priority: TaskPriority;
-    location_id: number;
-    assigned_to?: number;
-    company_id?: number;
+interface AdminTaskAssignmentProps {
+    companyId: number;
+    locationId: number;
+    employees: any[];
+    currentUser: any;
+    companyName: string;
+    setIsLoading: (isLoading: boolean) => void;
 }
 
-const AdminTaskAssignment = () => {
-    const [isLoading, setIsLoading] = useState(true);
-
-    const [currentUser, setCurrentUser] = useState<any>(null);
-    const [tasks, setTasks] = useState<Task[]>([]);
+const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
+    companyId,
+    locationId,
+    employees,
+    currentUser,
+    companyName,
+    setIsLoading,
+}) => {
     const [newTask, setNewTask] = useState("");
-    const [description, setDescription] = useState<string | undefined>();
-    const [dueDate, setDueDate] = useState<string | undefined>();
+    const [description, setDescription] = useState<string>("");
+    const [dueDate, setDueDate] = useState<string>("");
     const [isPooled, setIsPooled] = useState(false);
     const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
-    const [locationId, setLocationId] = useState<number>(0);
-    const [selectedEmployee, setSelectedEmployee] = useState<any>();
-    const [greeting, setGreeting] = useState("");
-    const [companyName, setCompanyName] = useState("");
-    const [employees, setEmployees] = useState<any[]>([]);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [confirmationMessage, setConfirmationMessage] = useState<
-        string | null
-    >(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+    const [notification, setNotification] = useState({ type: "", message: "" });
+    const [isAssigning, setIsAssigning] = useState(false);
 
-    useEffect(() => {
-        const currentHour = new Date().getHours();
-        if (currentHour < 12) {
-            setGreeting("Good morning");
-        } else if (currentHour < 18) {
-            setGreeting("Good afternoon");
-        } else {
-            setGreeting("Good evening");
-        }
+    const handleAssignTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsAssigning(true);
 
-        const fetchUserData = async () => {
-            setIsLoading(true);
-            const token = Cookies.get("token");
-            if (token) {
-                try {
-                    const response = await getUser(undefined, token);
-                    const userData = await response.json();
-                    setCurrentUser(userData);
-
-                    if (userData.company_id) {
-                        const companyResponse = await getCompany(
-                            userData.company_id
-                        );
-                        const companyData = await companyResponse.json();
-                        setCompanyName(companyData.name);
-                    }
-
-                    // Store each user data field in a separate cookie
-                    Object.entries(userData).forEach(
-                        ([key, value]: [string, any]) => {
-                            if (value !== null && value !== undefined) {
-                                if (key === "location_ids") {
-                                    Cookies.set(
-                                        `user_${key}`,
-                                        value.join(","),
-                                        { expires: 7 }
-                                    );
-                                } else {
-                                    Cookies.set(
-                                        `user_${key}`,
-                                        typeof value === "object"
-                                            ? JSON.stringify(value)
-                                            : String(value),
-                                        { expires: 7 }
-                                    );
-                                }
-                            }
-                        }
-                    );
-
-                    // Fetch employees for the selected location
-                    const selectedLocationId = Cookies.get(
-                        "selected_location_id"
-                    );
-                    if (selectedLocationId) {
-                        setLocationId(parseInt(selectedLocationId));
-                        const employeesResponse = await getUsersByLocation(
-                            parseInt(selectedLocationId)
-                        );
-                        const employeesData = await employeesResponse.json();
-                        setEmployees(employeesData);
-                    }
-                } catch (error) {
-                    console.error("Error fetching user data:", error);
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        fetchUserData();
-    }, []);
-
-    const handleAssignTask = async () => {
-        if (newTask && locationId && (isPooled || selectedEmployee)) {
-            setIsSubmitting(true);
-            const newTaskObj: Task = {
-                task_title: newTask,
-                description: description || undefined,
-                due_date: dueDate,
-                is_pooled: isPooled,
-                priority: priority,
-                location_id: locationId,
-                assigned_to: isPooled
-                    ? undefined
-                    : selectedEmployee?.["user_id"],
-                company_id: currentUser?.company_id,
-            };
-
+        if (newTask && (isPooled || selectedEmployee)) {
             try {
-                const response = await createTask(newTaskObj);
+                const response = await createTask({
+                    task_title: newTask,
+                    description: description,
+                    due_date: dueDate,
+                    is_pooled: isPooled,
+                    priority: priority,
+                    location_id: locationId,
+                    assigned_to: isPooled
+                        ? undefined
+                        : parseInt(selectedEmployee),
+                    company_id: companyId,
+                });
+
                 if (response.ok) {
-                    const createdTask = await response.json();
-                    setTasks([...tasks, createdTask]);
+                    setNotification({
+                        type: "success",
+                        message: "Task assigned successfully!",
+                    });
                     // Reset form fields
                     setNewTask("");
-                    setDescription(undefined);
-                    setDueDate(undefined);
+                    setDescription("");
+                    setDueDate("");
                     setIsPooled(false);
                     setPriority(TaskPriority.MEDIUM);
-                    setSelectedEmployee(undefined);
-                    setErrorMessage(null);
-                    setConfirmationMessage("Task added successfully!");
-                    setTimeout(() => setConfirmationMessage(null), 3000);
+                    setSelectedEmployee("");
                 } else {
-                    const errorData = await response.json();
-                    setErrorMessage(errorData.detail || "Error creating task");
+                    setNotification({
+                        type: "error",
+                        message: "Failed to assign task. Please try again.",
+                    });
                 }
             } catch (error) {
-                console.error("Error creating task:", error);
-                setErrorMessage("An unexpected error occurred");
+                console.error("Error assigning task:", error);
+                setNotification({
+                    type: "error",
+                    message: "An error occurred. Please try again.",
+                });
             } finally {
-                setIsSubmitting(false);
+                setIsAssigning(false);
             }
         } else {
-            setErrorMessage("Please fill in all required fields");
+            setNotification({
+                type: "error",
+                message: "Please fill in all required fields",
+            });
+            setIsAssigning(false);
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-gray-100 flex">
-            <Sidebar />
-
-            <div className="flex-1 p-8">
-                <div className="mb-6 text-center">
-                    <h1 className="text-3xl font-bold mb-2">
-                        {greeting}, Admin!
-                    </h1>
-                    <p className="text-lg text-gray-600">{companyName}</p>
+        <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-2">Assign New Task</h2>
+            <p className="text-lg text-gray-600 mb-6">{companyName}</p>
+            {notification.message && (
+                <div
+                    className={`mb-4 p-4 rounded-md ${
+                        notification.type === "success"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                    }`}
+                >
+                    {notification.message}
                 </div>
-
-                <div className="p-6 bg-white shadow-lg rounded-lg max-w-lg mx-auto">
-                    <h2 className="text-xl font-semibold mb-4">
-                        Assign New Task
-                    </h2>
-
-                    {errorMessage && (
-                        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-                            {errorMessage}
-                        </div>
-                    )}
-
-                    {confirmationMessage && (
-                        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-                            {confirmationMessage}
-                        </div>
-                    )}
-
-                    <div className="flex flex-col space-y-3">
-                        <label
-                            htmlFor="taskTitle"
-                            className="font-medium text-gray-700"
-                        >
-                            Task Title
-                        </label>
+            )}
+            <form onSubmit={handleAssignTask} className="space-y-4">
+                <div>
+                    <label
+                        htmlFor="taskTitle"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Task Title
+                    </label>
+                    <input
+                        type="text"
+                        id="taskTitle"
+                        value={newTask}
+                        onChange={(e) => setNewTask(e.target.value)}
+                        required
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Description
+                    </label>
+                    <textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="dueDate"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Due Date
+                    </label>
+                    <input
+                        type="date"
+                        id="dueDate"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="priority"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Priority
+                    </label>
+                    <select
+                        id="priority"
+                        value={priority}
+                        onChange={(e) =>
+                            setPriority(
+                                parseInt(e.target.value) as TaskPriority
+                            )
+                        }
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                        <option value={TaskPriority.LOW}>Low</option>
+                        <option value={TaskPriority.MEDIUM}>Medium</option>
+                        <option value={TaskPriority.HIGH}>High</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="flex items-center">
                         <input
-                            id="taskTitle"
-                            type="text"
-                            placeholder="Enter task title"
-                            value={newTask}
-                            onChange={(e) => setNewTask(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                            required
-                            minLength={1}
-                            maxLength={200}
+                            type="checkbox"
+                            checked={isPooled}
+                            onChange={(e) => setIsPooled(e.target.checked)}
+                            className="form-checkbox"
                         />
-
+                        <span className="ml-2">Pool Task</span>
+                    </label>
+                </div>
+                {!isPooled && (
+                    <div>
                         <label
-                            htmlFor="taskDescription"
-                            className="font-medium text-gray-700"
+                            htmlFor="employee"
+                            className="block text-sm font-medium text-gray-700"
                         >
-                            Task Description
-                        </label>
-                        <textarea
-                            id="taskDescription"
-                            placeholder="Enter task description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg"
-                        />
-
-                        <label
-                            htmlFor="dueDate"
-                            className="font-medium text-gray-700"
-                        >
-                            Due Date
-                        </label>
-                        <input
-                            id="dueDate"
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            min={new Date().toISOString().split("T")[0]}
-                            className="w-full p-3 border border-gray-300 rounded-lg"
-                        />
-
-                        <label
-                            htmlFor="priority"
-                            className="font-medium text-gray-700"
-                        >
-                            Priority
+                            Assign to Employee
                         </label>
                         <select
-                            id="priority"
-                            value={priority}
+                            id="employee"
+                            value={selectedEmployee}
                             onChange={(e) =>
-                                setPriority(
-                                    e.target.value as unknown as TaskPriority
-                                )
+                                setSelectedEmployee(e.target.value)
                             }
-                            className="w-full p-3 border border-gray-300 rounded-lg"
+                            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
-                            <option value={TaskPriority.LOW}>Low</option>
-                            <option value={TaskPriority.MEDIUM}>Medium</option>
-                            <option value={TaskPriority.HIGH}>High</option>
+                            <option value="">Select an employee</option>
+                            {employees.map((employee) => (
+                                <option
+                                    key={employee.user_id}
+                                    value={employee.user_id}
+                                >
+                                    {employee.first_name} {employee.last_name}
+                                </option>
+                            ))}
                         </select>
-
-                        <label className="inline-flex items-center">
-                            <input
-                                type="checkbox"
-                                checked={isPooled}
-                                onChange={(e) => {
-                                    setIsPooled(e.target.checked);
-                                    if (e.target.checked) {
-                                        setSelectedEmployee(undefined);
-                                    }
-                                }}
-                                className="form-checkbox"
-                            />
-                            <span className="ml-2 font-medium text-gray-700">
-                                Pool Task
-                            </span>
-                        </label>
-
-                        {!isPooled && (
-                            <>
-                                <label
-                                    htmlFor="employee"
-                                    className="font-medium text-gray-700"
-                                >
-                                    Assign to Employee
-                                </label>
-                                <select
-                                    id="employee"
-                                    value={selectedEmployee?.["user_id"] || ""}
-                                    onChange={(e) => {
-                                        const employee = employees.find(
-                                            (employee) =>
-                                                employee["user_id"] ===
-                                                parseInt(e.target.value)
-                                        );
-                                        setSelectedEmployee(employee);
-                                    }}
-                                    className="w-full p-3 border border-gray-300 rounded-lg"
-                                >
-                                    <option value="">Select an employee</option>
-                                    {employees.map((employee) => (
-                                        <option
-                                            key={employee["user_id"]}
-                                            value={employee["user_id"]}
-                                        >
-                                            {employee["first_name"] +
-                                                " " +
-                                                employee["last_name"]}
-                                        </option>
-                                    ))}
-                                </select>
-                            </>
-                        )}
-
-                        <button
-                            onClick={handleAssignTask}
-                            disabled={isSubmitting}
-                            className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400"
-                        >
-                            {isSubmitting ? (
-                                <svg
-                                    className="animate-spin h-5 w-5 mr-3"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    ></path>
-                                </svg>
-                            ) : (
-                                <PlusIcon className="h-5 w-5 mr-2" />
-                            )}
-                            {isSubmitting ? "Assigning..." : "Assign Task"}
-                        </button>
                     </div>
-                </div>
-            </div>
+                )}
+                <button
+                    type="submit"
+                    disabled={isAssigning}
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                    {isAssigning ? (
+                        <>
+                            <svg
+                                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                ></circle>
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            Assigning...
+                        </>
+                    ) : (
+                        "Assign Task"
+                    )}
+                </button>
+            </form>
         </div>
     );
 };

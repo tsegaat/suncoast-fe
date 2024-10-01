@@ -5,9 +5,8 @@ import {
     listCompanies,
     deleteCompany,
 } from "../../accessors/AscendHealthAccessor";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Cookies from "js-cookie";
-import { PlusIcon } from "@heroicons/react/24/outline";
 
 interface Location {
     name: string;
@@ -37,12 +36,14 @@ export default function SuperAdminPage() {
     const [companyToDelete, setCompanyToDelete] = useState<Company | null>(
         null
     );
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchCompanies();
     }, []);
 
     const fetchCompanies = async () => {
+        setIsLoading(true);
         try {
             const response = await listCompanies();
             const data = await response.json();
@@ -50,6 +51,8 @@ export default function SuperAdminPage() {
             setFilteredCompanies(data);
         } catch (error) {
             console.error("Error fetching companies:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -67,7 +70,9 @@ export default function SuperAdminPage() {
 
     const handleLocationSelect = (location: Location) => {
         if (selectedCompany) {
-            navigate("/admin");
+            navigate(
+                `/admin/${selectedCompany.company_id}/${location.location_id}`
+            );
         }
         setIsModalOpen(false);
     };
@@ -79,6 +84,7 @@ export default function SuperAdminPage() {
 
     const confirmDelete = async () => {
         if (companyToDelete) {
+            setIsLoading(true);
             try {
                 await deleteCompany(companyToDelete.company_id);
                 setCompanies(
@@ -94,6 +100,8 @@ export default function SuperAdminPage() {
                 setCompanyToDelete(null);
             } catch (error) {
                 console.error("Error deleting company:", error);
+            } finally {
+                setIsLoading(false);
             }
         }
     };
@@ -103,15 +111,10 @@ export default function SuperAdminPage() {
     };
 
     const handleSignOut = () => {
-        // Get all cookie names
         const cookies = Cookies.get();
-
-        // Remove all cookies
         Object.keys(cookies).forEach((cookieName) => {
             Cookies.remove(cookieName, { path: "/" });
         });
-
-        // Navigate to the root page
         navigate("/");
     };
 
@@ -119,9 +122,16 @@ export default function SuperAdminPage() {
         navigate("/companies/register");
     };
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            {/* Page Title */}
             <header className="bg-white shadow-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-gray-900">
@@ -165,7 +175,6 @@ export default function SuperAdminPage() {
                     </div>
                 </div>
 
-                {/* Companies Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filteredCompanies.map((company) => (
                         <div

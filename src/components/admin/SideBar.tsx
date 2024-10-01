@@ -1,175 +1,137 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowDownRightIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import { getLocation } from "../../accessors/AscendHealthAccessor";
-import Cookies from "js-cookie";
+import React, { useState } from "react";
+import {
+    UserCircleIcon,
+    ClipboardDocumentListIcon,
+    UsersIcon,
+    UserPlusIcon,
+    ArrowRightIcon,
+    XMarkIcon,
+} from "@heroicons/react/24/outline";
 
-interface Location {
-    id: number;
-    name: string;
+interface SidebarProps {
+    currentUser: any;
+    companyName: string;
+    currentView: string;
+    setCurrentView: (view: string) => void;
+    isSuper: boolean;
+    locations: any[];
+    selectedLocationId: number | null;
+    handleLocationChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
-export default function Sidebar() {
-    const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(false);
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
-        null
-    );
+const Sidebar: React.FC<SidebarProps> = ({
+    currentUser,
+    companyName,
+    currentView,
+    setCurrentView,
+    isSuper,
+    locations,
+    selectedLocationId,
+    handleLocationChange,
+}) => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchLocations = async () => {
-            const locationIdsString = Cookies.get("user_location_ids");
-            if (locationIdsString) {
-                const ids = locationIdsString
-                    .split(",")
-                    .map((id) => parseInt(id, 10));
-                try {
-                    const fetchedLocations = await Promise.all(
-                        ids.map(async (id: number) => {
-                            const response = await getLocation(id);
-                            const locationName = await response.text(); // Assuming the response is plain text
-                            // Remove quotes from the location name
-                            const cleanedName = locationName.replace(
-                                /^"|"$/g,
-                                ""
-                            );
-                            return { id, name: cleanedName };
-                        })
-                    );
-                    setLocations(fetchedLocations);
-
-                    // Set the first location as default if not already set
-                    const storedLocationId = Cookies.get(
-                        "selected_location_id"
-                    );
-                    if (storedLocationId) {
-                        setSelectedLocationId(parseInt(storedLocationId, 10));
-                    } else if (fetchedLocations.length > 0) {
-                        setSelectedLocationId(fetchedLocations[0].id);
-                        Cookies.set(
-                            "selected_location_id",
-                            fetchedLocations[0].id.toString()
-                        );
-                    }
-                } catch (error) {
-                    console.error("Error fetching locations:", error);
-                }
-            }
-        };
-
-        fetchLocations();
-    }, []);
-
-    const toggleMenu = () => {
-        setIsOpen(!isOpen);
-    };
-
-    const handleLocationChange = (
-        event: React.ChangeEvent<HTMLSelectElement>
-    ) => {
-        const locationId = parseInt(event.target.value);
-        setSelectedLocationId(locationId);
-        Cookies.set("selected_location_id", locationId.toString());
-    };
-
-    const handleSignOut = () => {
-        // Remove all cookies
-        Object.keys(Cookies.get()).forEach((cookieName) => {
-            Cookies.remove(cookieName);
-        });
-
-        // Redirect to home page
-        navigate("/");
-    };
-
-    const renderNavItems = () => (
-        <ul>
-            <li className="mb-4">
-                <select
-                    value={selectedLocationId || ""}
-                    onChange={handleLocationChange}
-                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg"
-                >
-                    {locations.map((location) => (
-                        <option key={location.id} value={location.id}>
-                            {location.name}
-                        </option>
-                    ))}
-                </select>
-            </li>
-            <li className="mb-4">
-                <button
-                    onClick={() => navigate("/admin")}
-                    className="w-full text-left text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300 ease-in-out"
-                >
-                    Task Management
-                </button>
-            </li>
-            <li className="mb-4">
-                <button
-                    onClick={() => navigate("/admin/users")}
-                    className="w-full text-left text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300 ease-in-out"
-                >
-                    Employee Management
-                </button>
-            </li>
-            <li className="mb-4">
-                <button
-                    onClick={() => navigate("/admin/create")}
-                    className="w-full text-left text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300 ease-in-out"
-                >
-                    Create Employee
-                </button>
-            </li>
-            <li className="mt-auto">
-                <button
-                    onClick={handleSignOut}
-                    className="w-full text-left text-white bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg transition duration-300 ease-in-out"
-                >
-                    Sign Out
-                </button>
-            </li>
-        </ul>
-    );
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
         <>
-            {/* Hamburger Icon for Mobile */}
-            <div className="md:hidden p-4 bg-indigo-700 text-white">
-                <button onClick={toggleMenu}>
-                    <ArrowDownRightIcon className="h-8 w-8" />
-                </button>
-            </div>
-
-            {/* Sidebar for larger screens */}
-            <aside className="hidden md:flex md:w-72 bg-indigo-700 text-white flex-col">
-                <div className="py-6 px-4 bg-indigo-800">
-                    <h1 className="text-center text-xl font-bold">
-                        Office Manager
-                    </h1>
+            <button
+                className="md:hidden fixed top-4 left-4 z-20 bg-gray-800 text-white p-2 rounded-md"
+                onClick={toggleSidebar}
+            >
+                {isSidebarOpen ? (
+                    <XMarkIcon className="h-6 w-6" />
+                ) : (
+                    <ArrowRightIcon className="h-6 w-6" />
+                )}
+            </button>
+            <div
+                className={`bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
+                    isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                } md:relative md:translate-x-0 transition duration-200 ease-in-out z-10`}
+            >
+                <div className="flex flex-col items-center space-y-2">
+                    <UserCircleIcon className="h-16 w-16 text-white" />
+                    <h2 className="text-xl font-bold">
+                        {currentUser?.first_name || "Admin"}
+                    </h2>
+                    <p className="text-sm text-gray-400">{companyName}</p>
                 </div>
-                <nav className="flex-1 px-4 mt-6 flex flex-col">
-                    {renderNavItems()}
-                </nav>
-            </aside>
 
-            {/* Full-screen Sidebar for mobile when open */}
-            {isOpen && (
-                <div className="fixed inset-0 z-50 bg-indigo-700 text-white flex flex-col">
-                    <div className="py-6 px-4 bg-indigo-800 flex justify-between items-center">
-                        <h1 className="text-center text-xl font-bold">
-                            Office Manager
-                        </h1>
-                        <button onClick={toggleMenu}>
-                            <XMarkIcon className="h-8 w-8" />
-                        </button>
+                {isSuper && (
+                    <div className="px-4 py-2">
+                        <label
+                            htmlFor="location"
+                            className="block text-sm font-medium text-gray-300 mb-2"
+                        >
+                            Select Location
+                        </label>
+                        <select
+                            id="location"
+                            name="location"
+                            className="w-full px-3 py-2 text-sm bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={selectedLocationId || ""}
+                            onChange={handleLocationChange}
+                        >
+                            {locations.map((location) => (
+                                <option
+                                    key={location.location_id}
+                                    value={location.location_id}
+                                >
+                                    {location.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                    <nav className="flex-1 px-4 mt-6 flex flex-col">
-                        {renderNavItems()}
-                    </nav>
-                </div>
-            )}
+                )}
+
+                <nav>
+                    <button
+                        onClick={() => {
+                            setCurrentView("tasks");
+                            setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
+                            currentView === "tasks"
+                                ? "bg-blue-600"
+                                : "hover:bg-gray-700"
+                        }`}
+                    >
+                        <ClipboardDocumentListIcon className="h-5 w-5" />
+                        <span>Task Assignment</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setCurrentView("users");
+                            setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
+                            currentView === "users"
+                                ? "bg-blue-600"
+                                : "hover:bg-gray-700"
+                        }`}
+                    >
+                        <UsersIcon className="h-5 w-5" />
+                        <span>User Management</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setCurrentView("create");
+                            setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
+                            currentView === "create"
+                                ? "bg-blue-600"
+                                : "hover:bg-gray-700"
+                        }`}
+                    >
+                        <UserPlusIcon className="h-5 w-5" />
+                        <span>Create Employee</span>
+                    </button>
+                </nav>
+            </div>
         </>
     );
-}
+};
+
+export default Sidebar;
