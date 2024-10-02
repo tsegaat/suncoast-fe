@@ -111,18 +111,32 @@ export default function CompanyDetailsForm() {
         e.preventDefault();
         setIsLoading(true);
 
+        const formData = new FormData();
+
+        // Append company name
+        formData.append("name", companyName);
+
+        // Append locations as a JSON string
         const formattedLocations = locations.map((location) => ({
             name: location.name,
             address: `${location.street}, ${location.city}, ${location.state} ${location.zipcode}`,
         }));
 
-        const userData = {
-            name: companyName,
-            locations: formattedLocations,
-        };
+        formData.append("locations", JSON.stringify(formattedLocations));
+
+        // Append logo file if it exists
+        if (logo) {
+            formData.append("logo", logo);
+        }
+
+        // const userData = {
+        //     name: companyName,
+        //     locations: formattedLocations,
+        // };
+        console.log(formData.getAll("name"));
 
         try {
-            const response = await createCompany(userData);
+            const response = await createCompany(formData);
             if (response.status === 200) {
                 setNotification({
                     message: "Company created successfully!",

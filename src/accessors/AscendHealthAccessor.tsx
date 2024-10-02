@@ -5,7 +5,7 @@ export function createEmployee(userData: any) {
     const authToken = getCookie("token");
 
     return fetch(
-        "https://oy6esz8ug1.execute-api.us-east-1.amazonaws.com/prod/users/users",
+        "https://a6kqv0pdwd.execute-api.us-east-1.amazonaws.com/prod/users/users",
         {
             method: "POST",
             headers: {
@@ -19,7 +19,7 @@ export function createEmployee(userData: any) {
 
 export function loginUser(userData: LoginRequest) {
     return fetch(
-        "https://oy6esz8ug1.execute-api.us-east-1.amazonaws.com/prod/users/login",
+        "https://a6kqv0pdwd.execute-api.us-east-1.amazonaws.com/prod/users/login",
         {
             method: "POST",
             mode: "cors",
@@ -40,7 +40,7 @@ export function getUser(
     const authToken = token || getCookie("token");
 
     return fetch(
-        "https://oy6esz8ug1.execute-api.us-east-1.amazonaws.com/prod/users/getUser",
+        "https://a6kqv0pdwd.execute-api.us-east-1.amazonaws.com/prod/users/getUser",
         {
             method: "POST",
             headers: {
@@ -61,7 +61,7 @@ export function listCompanies() {
     const authToken = getCookie("token");
 
     return fetch(
-        "https://30r6apjcce.execute-api.us-east-1.amazonaws.com/prod/companies/",
+        "https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/",
         {
             method: "GET",
             headers: {
@@ -76,14 +76,14 @@ export function createCompany(companyData: any) {
     const authToken = getCookie("token");
 
     return fetch(
-        "https://30r6apjcce.execute-api.us-east-1.amazonaws.com/prod/companies/",
+        "https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/",
         {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${authToken}`,
             },
-            body: JSON.stringify(companyData),
+            body: companyData,
         }
     );
 }
@@ -92,7 +92,7 @@ export function deleteCompany(companyId: any) {
     const authToken = getCookie("token");
 
     return fetch(
-        `https://30r6apjcce.execute-api.us-east-1.amazonaws.com/prod/companies/${companyId}`,
+        `https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/${companyId}`,
         {
             method: "DELETE",
             headers: {
@@ -107,7 +107,7 @@ export function getLocation(locationId: number) {
     const authToken = getCookie("token");
 
     return fetch(
-        `https://30r6apjcce.execute-api.us-east-1.amazonaws.com/prod/companies/locations/${locationId}`,
+        `https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/locations/${locationId}`,
         {
             method: "GET",
             headers: {
@@ -122,7 +122,7 @@ export function getUsersByLocation(locationId: number) {
     const authToken = getCookie("token");
 
     return fetch(
-        `https://oy6esz8ug1.execute-api.us-east-1.amazonaws.com/prod/users/users/location/${locationId}`,
+        `https://a6kqv0pdwd.execute-api.us-east-1.amazonaws.com/prod/users/users/location/${locationId}`,
         {
             method: "GET",
             headers: {
@@ -137,7 +137,7 @@ export function createTask(taskData: any) {
     const authToken = getCookie("token");
 
     return fetch(
-        "https://99so0tk1jh.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks",
+        "https://zlh1s6pxw4.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks",
         {
             method: "POST",
             headers: {
@@ -153,7 +153,7 @@ export function getTasksByUserToken() {
     const authToken = getCookie("token");
 
     return fetch(
-        "https://99so0tk1jh.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks/user",
+        "https://zlh1s6pxw4.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks/user",
         {
             method: "GET",
             headers: {
@@ -168,7 +168,7 @@ export function updateTaskStatus(task_id: number, new_status: string) {
     const authToken = getCookie("token");
 
     return fetch(
-        `https://99so0tk1jh.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks/${task_id}/status`,
+        `https://zlh1s6pxw4.execute-api.us-east-1.amazonaws.com/prod/tasks/tasks/${task_id}/status`,
         {
             method: "POST",
             headers: {
@@ -184,7 +184,7 @@ export function getCompany(companyId: number) {
     const authToken = getCookie("token");
 
     return fetch(
-        `https://30r6apjcce.execute-api.us-east-1.amazonaws.com/prod/companies/${companyId}`,
+        `https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/${companyId}`,
         {
             method: "GET",
             headers: {
