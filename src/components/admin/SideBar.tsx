@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         }`}
                     >
                         <ClipboardDocumentListIcon className="h-5 w-5" />
-                        <span>Task Assignment</span>
+                        <span>Create a Task</span>
                     </button>
                     <button
                         onClick={() => {
