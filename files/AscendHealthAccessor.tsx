@@ -193,18 +193,3 @@ export function getCompany(companyId: number) {
         }
     );
 }
-
-export function updateCompany(companyId: number, companyData: any) {
-    const authToken = getCookie("token");
-
-    return fetch(
-        `https://goadv7ebi4.execute-api.us-east-1.amazonaws.com/prod/companies/${companyId}`,
-        {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${authToken}`,
-            },
-            body: companyData,
-        }
-    );
-}

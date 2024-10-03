@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LocationModal from "../../components/superadmin/LocationModal";
-import EditCompanyModal from "../../components/superadmin/EditCompanyModal";
 import {
     listCompanies,
     deleteCompany,
-    updateCompany,
 } from "../../accessors/AscendHealthAccessor";
-import { TrashIcon, PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Cookies from "js-cookie";
 
 interface Location {
@@ -31,8 +29,7 @@ export default function SuperAdminPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [companies, setCompanies] = useState<Company[]>([]);
     const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCompany, setSelectedCompany] = useState<Company | null>(
         null
     );
@@ -68,13 +65,7 @@ export default function SuperAdminPage() {
 
     const handleCompanyClick = (company: Company) => {
         setSelectedCompany(company);
-        setIsLocationModalOpen(true);
-    };
-
-    const handleEditClick = (event: React.MouseEvent, company: Company) => {
-        event.stopPropagation();
-        setSelectedCompany(company);
-        setIsEditModalOpen(true);
+        setIsModalOpen(true);
     };
 
     const handleLocationSelect = (location: Location) => {
@@ -83,7 +74,7 @@ export default function SuperAdminPage() {
                 `/admin/${selectedCompany.company_id}/${location.location_id}`
             );
         }
-        setIsLocationModalOpen(false);
+        setIsModalOpen(false);
     };
 
     const handleDeleteClick = (event: React.MouseEvent, company: Company) => {
@@ -111,28 +102,6 @@ export default function SuperAdminPage() {
                 console.error("Error deleting company:", error);
             } finally {
                 setIsLoading(false);
-            }
-        }
-    };
-
-    const handleUpdateCompany = async (
-        updatedCompanyData: Partial<Company>
-    ) => {
-        if (selectedCompany) {
-            try {
-                await updateCompany(
-                    selectedCompany.company_id,
-                    updatedCompanyData
-                );
-                const updatedCompanies = companies.map((company) =>
-                    company.company_id === selectedCompany.company_id
-                        ? { ...company, ...updatedCompanyData }
-                        : company
-                );
-                setCompanies(updatedCompanies);
-                setFilteredCompanies(updatedCompanies);
-            } catch (error) {
-                console.error("Error updating company:", error);
             }
         }
     };
@@ -221,44 +190,25 @@ export default function SuperAdminPage() {
                             <h2 className="text-xl font-semibold text-gray-800 text-center">
                                 {company.name}
                             </h2>
-                            <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <button
-                                    onClick={(e) => handleEditClick(e, company)}
-                                    className="p-2 text-blue-500 hover:text-blue-700"
-                                    title="Edit company"
-                                >
-                                    <PencilIcon className="h-5 w-5" />
-                                </button>
-                                <button
-                                    onClick={(e) =>
-                                        handleDeleteClick(e, company)
-                                    }
-                                    className="p-2 text-red-500 hover:text-red-700"
-                                    title="Delete company"
-                                >
-                                    <TrashIcon className="h-5 w-5" />
-                                </button>
-                            </div>
+                            <button
+                                onClick={(e) => handleDeleteClick(e, company)}
+                                className="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                title="Delete company"
+                            >
+                                <TrashIcon className="h-5 w-5" />
+                            </button>
                         </div>
                     ))}
                 </div>
             </main>
 
             {selectedCompany && (
-                <>
-                    <LocationModal
-                        isOpen={isLocationModalOpen}
-                        onClose={() => setIsLocationModalOpen(false)}
-                        locations={selectedCompany.locations}
-                        onLocationSelect={handleLocationSelect}
-                    />
-                    <EditCompanyModal
-                        isOpen={isEditModalOpen}
-                        onClose={() => setIsEditModalOpen(false)}
-                        company={selectedCompany}
-                        onUpdate={handleUpdateCompany}
-                    />
-                </>
+                <LocationModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    locations={selectedCompany.locations}
+                    onLocationSelect={handleLocationSelect}
+                />
             )}
 
             {companyToDelete && (
