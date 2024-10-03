@@ -194,7 +194,7 @@ export function getCompany(companyId: number) {
     );
 }
 
-export function updateCompany(companyId: number, companyData: any) {
+export function updateCompany(companyId: number, companyData: FormData) {
     const authToken = getCookie("token");
 
     return fetch(

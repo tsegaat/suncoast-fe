@@ -115,9 +115,7 @@ export default function SuperAdminPage() {
         }
     };
 
-    const handleUpdateCompany = async (
-        updatedCompanyData: Partial<Company>
-    ) => {
+    const handleUpdateCompany = async (updatedCompanyData: FormData) => {
         if (selectedCompany) {
             try {
                 await updateCompany(
@@ -131,6 +129,7 @@ export default function SuperAdminPage() {
                 );
                 setCompanies(updatedCompanies);
                 setFilteredCompanies(updatedCompanies);
+                setIsEditModalOpen(false);
             } catch (error) {
                 console.error("Error updating company:", error);
             }

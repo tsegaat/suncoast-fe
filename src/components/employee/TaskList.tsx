@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckIcon, TrashIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, ArrowPathIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { classNames } from "../../utils/helper";
 
 enum TaskPriority {
@@ -34,12 +34,12 @@ interface Task {
 interface TaskListProps {
     tasks: Task[];
     handleCompleteTask?: (id: number) => Promise<void>;
-    handleRemoveTask?: (id: number) => Promise<void>;
+    handleRelistTask?: (id: number) => Promise<void>;
     handleAddTaskFromPool?: (id: number) => Promise<void>;
     expandedTaskIds: number[];
     toggleDescription: (id: number) => void;
     completingTaskId?: number | null;
-    removingTaskId?: number | null;
+    relistingTaskId?: number | null;
     buttonText: string;
     buttonAction: (id: number) => Promise<void>;
 }
@@ -64,16 +64,42 @@ const TaskList: React.FC<TaskListProps> = ({
     expandedTaskIds,
     toggleDescription,
     completingTaskId,
-    removingTaskId,
+    relistingTaskId,
     buttonText,
     buttonAction,
 }) => {
+    const getButtonIcon = (text: string) => {
+        switch (text) {
+            case "Mark as Complete":
+                return <CheckIcon className="h-5 w-5 mr-1" />;
+            case "Relist":
+                return <ArrowPathIcon className="h-5 w-5 mr-1" />;
+            case "Add to My Tasks":
+                return <PlusIcon className="h-5 w-5 mr-1" />;
+            default:
+                return null;
+        }
+    };
+
+    const getButtonColor = (text: string) => {
+        switch (text) {
+            case "Mark as Complete":
+                return "bg-green-600 hover:bg-green-700";
+            case "Relist":
+                return "bg-yellow-600 hover:bg-yellow-700";
+            case "Add to My Tasks":
+                return "bg-blue-600 hover:bg-blue-700";
+            default:
+                return "bg-gray-600 hover:bg-gray-700";
+        }
+    };
+
     return (
         <ul className="divide-y divide-gray-200">
             {tasks.map((task) => (
                 <li
                     key={task.task_id}
-                    className="p-8 hover:bg-gray-50 transition-colors"
+                    className="p-4 hover:bg-gray-50 transition-colors"
                 >
                     <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                         <div className="flex-1 min-w-0">
@@ -135,18 +161,16 @@ const TaskList: React.FC<TaskListProps> = ({
                         <div className="mt-2 flex items-center text-sm sm:mt-0">
                             <button
                                 onClick={() => buttonAction(task.task_id)}
-                                className={`flex items-center px-3 py-1 rounded-md text-white ${
-                                    buttonText === "Remove"
-                                        ? "bg-red-500 hover:bg-red-600"
-                                        : "bg-indigo-600 hover:bg-indigo-700"
-                                } transition-colors`}
+                                className={`flex items-center px-3 py-1 rounded-md text-white ${getButtonColor(
+                                    buttonText
+                                )} transition-colors`}
                                 disabled={
                                     completingTaskId === task.task_id ||
-                                    removingTaskId === task.task_id
+                                    relistingTaskId === task.task_id
                                 }
                             >
                                 {completingTaskId === task.task_id ||
-                                removingTaskId === task.task_id ? (
+                                relistingTaskId === task.task_id ? (
                                     <svg
                                         className="animate-spin h-5 w-5 mr-2"
                                         xmlns="http://www.w3.org/2000/svg"
@@ -167,12 +191,8 @@ const TaskList: React.FC<TaskListProps> = ({
                                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                         ></path>
                                     </svg>
-                                ) : buttonText === "Remove" ? (
-                                    <TrashIcon className="h-5 w-5 mr-1" />
-                                ) : buttonText === "Add to My Tasks" ? (
-                                    <PlusIcon className="h-5 w-5 mr-1" />
                                 ) : (
-                                    <CheckIcon className="h-5 w-5 mr-1" />
+                                    getButtonIcon(buttonText)
                                 )}
                                 {buttonText}
                             </button>

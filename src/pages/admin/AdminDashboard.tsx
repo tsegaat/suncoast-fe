@@ -26,6 +26,9 @@ const AdminDashboard: React.FC = () => {
     }>();
     const navigate = useNavigate();
 
+    // New state to store available locations
+    const [availableLocations, setAvailableLocations] = useState<any[]>([]);
+
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
@@ -48,6 +51,18 @@ const AdminDashboard: React.FC = () => {
                     );
                     const companyData = await companyResponse.json();
                     setCompanyData(companyData);
+
+                    // Set available locations based on user role
+                    if (userData.role === "super_admin") {
+                        setAvailableLocations(companyData.locations);
+                    } else {
+                        // For regular admin, filter locations based on their assigned locations
+                        const userLocations = companyData.locations.filter(
+                            (loc: any) =>
+                                userData.location_ids.includes(loc.location_id)
+                        );
+                        setAvailableLocations(userLocations);
+                    }
 
                     // Set initial selected location
                     if (userData.role === "super_admin") {
@@ -113,6 +128,7 @@ const AdminDashboard: React.FC = () => {
             currentUser: currentUser,
             companyName: companyData?.name || "",
             setIsLoading: setIsLoading,
+            locations: availableLocations, // Add this line to pass locations
             refreshEmployees: async () => {
                 if (selectedLocationId) {
                     const employeesResponse = await getUsersByLocation(
@@ -178,7 +194,7 @@ const AdminDashboard: React.FC = () => {
                     currentView={currentView}
                     setCurrentView={setCurrentView}
                     isSuper={currentUser.role === "super_admin"}
-                    locations={companyData?.locations || []}
+                    locations={availableLocations}
                     selectedLocationId={selectedLocationId}
                     handleLocationChange={handleLocationChange}
                 />

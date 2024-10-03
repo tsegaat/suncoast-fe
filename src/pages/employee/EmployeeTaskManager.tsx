@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tab, TabGroup, TabList, TabPanels, TabPanel } from "@headlessui/react";
+import { Tab } from "@headlessui/react";
 import { classNames } from "../../utils/helper";
 import Cookies from "js-cookie";
 import {
@@ -8,9 +8,10 @@ import {
     getTasksByUserToken,
     updateTaskStatus,
     getCompany,
-    // getPooledTasksWithCompanyIdAndLocationId
+    // getPooledTasksWithCompanyIdAndLocationId,
 } from "../../accessors/AscendHealthAccessor";
 import TaskList from "../../components/employee/TaskList";
+
 enum TaskPriority {
     Low = 1,
     Medium = 2,
@@ -40,9 +41,15 @@ interface Task {
     edit_timestamp?: string;
 }
 
+interface Location {
+    location_id: number;
+    name: string;
+}
+
 export default function EmployeeTaskManager() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
     const [taskPool, setTaskPool] = useState<Task[]>([]);
     const [greeting, setGreeting] = useState("");
     const [companyName, setCompanyName] = useState("");
@@ -51,8 +58,12 @@ export default function EmployeeTaskManager() {
     const [completingTaskId, setCompletingTaskId] = useState<number | null>(
         null
     );
-    const [removingTaskId, setRemovingTaskId] = useState<number | null>(null);
+    const [relistingTaskId, setRelistingTaskId] = useState<number | null>(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+        null
+    );
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -76,13 +87,27 @@ export default function EmployeeTaskManager() {
                         );
                         const companyData = await companyResponse.json();
                         setCompanyName(companyData.name);
+
+                        // Filter locations based on user's location_ids
+                        const userLocations = companyData.locations.filter(
+                            (loc: Location) =>
+                                userData.location_ids.includes(loc.location_id)
+                        );
+                        setLocations(userLocations);
+
+                        // Set default selected location
+                        if (userLocations.length > 0) {
+                            setSelectedLocationId(userLocations[0].location_id);
+                        }
                     }
 
                     await fetchTasks();
-                    await fetchPooledTasks(
-                        userData.company_id,
-                        userData.location_ids[0]
-                    );
+                    if (selectedLocationId) {
+                        await fetchPooledTasks(
+                            userData.company_id,
+                            selectedLocationId
+                        );
+                    }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
                 } finally {
@@ -94,20 +119,22 @@ export default function EmployeeTaskManager() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        if (selectedLocationId) {
+            const filtered = tasks.filter(
+                (task) => task.location_id === selectedLocationId
+            );
+            setFilteredTasks(filtered);
+            fetchPooledTasks(currentUser.company_id, selectedLocationId);
+        }
+    }, [selectedLocationId, tasks, currentUser]);
+
     const fetchTasks = async () => {
         try {
             const response = await getTasksByUserToken();
             let tasksData = await response.json();
             tasksData = tasksData.tasks;
-            const pendingTasks = tasksData.filter(
-                (task: Task) =>
-                    task.status === TaskStatus.Pending ||
-                    task.status === TaskStatus.InProgress
-            );
-            const completedTasks = tasksData.filter(
-                (task: Task) => task.status === TaskStatus.Completed
-            );
-            setTasks([...pendingTasks, ...completedTasks]);
+            setTasks(tasksData);
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
@@ -115,13 +142,21 @@ export default function EmployeeTaskManager() {
 
     const fetchPooledTasks = async (companyId: number, locationId: number) => {
         try {
-            // const response = await getPooledTasksWithCompanyIdAndLocationId(companyId, locationId);
+            // const response = await getPooledTasksWithCompanyIdAndLocationId(
+            //     companyId,
+            //     locationId
+            // );
             // const pooledTasksData = await response.json();
-            const pooledTasksData: Task[] = [];
-            setTaskPool(pooledTasksData);
+            setTaskPool([]);
         } catch (error) {
             console.error("Error fetching pooled tasks:", error);
         }
+    };
+
+    const handleLocationChange = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        setSelectedLocationId(Number(event.target.value));
     };
 
     const toggleDescription = (id: number) => {
@@ -159,49 +194,52 @@ export default function EmployeeTaskManager() {
         }
     };
 
-    const handleAddTaskFromPool = async (id: number) => {
-        const taskToAdd = taskPool.find((task) => task.task_id === id);
-        if (taskToAdd) {
-            setCompletingTaskId(id);
-            try {
-                const response = await updateTaskStatus(
-                    id,
-                    TaskStatus.InProgress
-                );
-                if (response.ok) {
-                    setTasks([
-                        ...tasks,
-                        {
-                            ...taskToAdd,
-                            is_pooled: false,
-                            status: TaskStatus.InProgress,
-                        },
-                    ]);
-                    setTaskPool(taskPool.filter((task) => task.task_id !== id));
-                } else {
-                    console.error("Failed to update task status");
-                }
-            } catch (error) {
-                console.error("Error updating task status:", error);
-            } finally {
-                setCompletingTaskId(null);
-            }
-        }
-    };
-
-    const handleRemoveTask = async (id: number) => {
-        setRemovingTaskId(id);
+    const handleRelistTask = async (id: number) => {
+        setRelistingTaskId(id);
         try {
             const response = await updateTaskStatus(id, TaskStatus.Pending);
             if (response.ok) {
-                setTasks(tasks.filter((task) => task.task_id !== id));
+                setTasks(
+                    tasks.map((task) =>
+                        task.task_id === id
+                            ? {
+                                  ...task,
+                                  status: TaskStatus.Pending,
+                                  completed_timestamp: undefined,
+                              }
+                            : task
+                    )
+                );
             } else {
                 console.error("Failed to update task status");
             }
         } catch (error) {
             console.error("Error updating task status:", error);
         } finally {
-            setRemovingTaskId(null);
+            setRelistingTaskId(null);
+        }
+    };
+
+    const handleAddTaskFromPool = async (id: number) => {
+        setCompletingTaskId(id);
+        try {
+            const response = await updateTaskStatus(id, TaskStatus.InProgress);
+            if (response.ok) {
+                const addedTask = taskPool.find((task) => task.task_id === id);
+                if (addedTask) {
+                    setTasks([
+                        ...tasks,
+                        { ...addedTask, status: TaskStatus.InProgress },
+                    ]);
+                    setTaskPool(taskPool.filter((task) => task.task_id !== id));
+                }
+            } else {
+                console.error("Failed to update task status");
+            }
+        } catch (error) {
+            console.error("Error updating task status:", error);
+        } finally {
+            setCompletingTaskId(null);
         }
     };
 
@@ -239,13 +277,41 @@ export default function EmployeeTaskManager() {
                     <p className="text-lg mt-2">{companyName}</p>
                 </div>
 
-                <TabGroup
-                    selectedIndex={selectedIndex}
-                    onChange={setSelectedIndex}
-                >
-                    <TabList className="flex bg-blue-50 p-8 space-x-1 rounded-t-lg">
-                        {["Pending Tasks", "Completed Tasks", "Task Pool"].map(
-                            (category) => (
+                <div className="p-6">
+                    <div className="mb-6">
+                        <label
+                            htmlFor="location-select"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                            Select Location
+                        </label>
+                        <select
+                            id="location-select"
+                            value={selectedLocationId || ""}
+                            onChange={handleLocationChange}
+                            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            {locations.map((location) => (
+                                <option
+                                    key={location.location_id}
+                                    value={location.location_id}
+                                >
+                                    {location.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <Tab.Group
+                        selectedIndex={selectedIndex}
+                        onChange={setSelectedIndex}
+                    >
+                        <Tab.List className="flex bg-blue-50 p-1 space-x-1 rounded-lg">
+                            {[
+                                "Pending Tasks",
+                                "Completed Tasks",
+                                "Task Pool",
+                            ].map((category) => (
                                 <Tab
                                     key={category}
                                     className={({ selected }) =>
@@ -260,51 +326,53 @@ export default function EmployeeTaskManager() {
                                 >
                                     {category}
                                 </Tab>
-                            )
-                        )}
-                    </TabList>
-                    <TabPanels className="mt-2">
-                        <TabPanel>
-                            <TaskList
-                                tasks={tasks.filter(
-                                    (task) =>
-                                        task.status !== TaskStatus.Completed
-                                )}
-                                handleCompleteTask={handleCompleteTask}
-                                expandedTaskIds={expandedTaskIds}
-                                toggleDescription={toggleDescription}
-                                completingTaskId={completingTaskId}
-                                buttonText="Mark as Complete"
-                                buttonAction={handleCompleteTask}
-                            />
-                        </TabPanel>
-                        <TabPanel>
-                            <TaskList
-                                tasks={tasks.filter(
-                                    (task) =>
-                                        task.status === TaskStatus.Completed
-                                )}
-                                handleRemoveTask={handleRemoveTask}
-                                expandedTaskIds={expandedTaskIds}
-                                toggleDescription={toggleDescription}
-                                removingTaskId={removingTaskId}
-                                buttonText="Remove"
-                                buttonAction={handleRemoveTask}
-                            />
-                        </TabPanel>
-                        <TabPanel>
-                            <TaskList
-                                tasks={taskPool}
-                                handleAddTaskFromPool={handleAddTaskFromPool}
-                                expandedTaskIds={expandedTaskIds}
-                                toggleDescription={toggleDescription}
-                                completingTaskId={completingTaskId}
-                                buttonText="Add to My Tasks"
-                                buttonAction={handleAddTaskFromPool}
-                            />
-                        </TabPanel>
-                    </TabPanels>
-                </TabGroup>
+                            ))}
+                        </Tab.List>
+                        <Tab.Panels className="mt-2">
+                            <Tab.Panel>
+                                <TaskList
+                                    tasks={filteredTasks.filter(
+                                        (task) =>
+                                            task.status !== TaskStatus.Completed
+                                    )}
+                                    handleCompleteTask={handleCompleteTask}
+                                    expandedTaskIds={expandedTaskIds}
+                                    toggleDescription={toggleDescription}
+                                    completingTaskId={completingTaskId}
+                                    buttonText="Mark as Complete"
+                                    buttonAction={handleCompleteTask}
+                                />
+                            </Tab.Panel>
+                            <Tab.Panel>
+                                <TaskList
+                                    tasks={filteredTasks.filter(
+                                        (task) =>
+                                            task.status === TaskStatus.Completed
+                                    )}
+                                    handleRelistTask={handleRelistTask}
+                                    expandedTaskIds={expandedTaskIds}
+                                    toggleDescription={toggleDescription}
+                                    relistingTaskId={relistingTaskId}
+                                    buttonText="Relist"
+                                    buttonAction={handleRelistTask}
+                                />
+                            </Tab.Panel>
+                            <Tab.Panel>
+                                <TaskList
+                                    tasks={taskPool}
+                                    handleAddTaskFromPool={
+                                        handleAddTaskFromPool
+                                    }
+                                    expandedTaskIds={expandedTaskIds}
+                                    toggleDescription={toggleDescription}
+                                    completingTaskId={completingTaskId}
+                                    buttonText="Add to My Tasks"
+                                    buttonAction={handleAddTaskFromPool}
+                                />
+                            </Tab.Panel>
+                        </Tab.Panels>
+                    </Tab.Group>
+                </div>
             </div>
         </div>
     );

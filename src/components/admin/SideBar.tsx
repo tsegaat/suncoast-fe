@@ -58,32 +58,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <p className="text-sm text-gray-400">{companyName}</p>
                 </div>
 
-                {isSuper && (
-                    <div className="px-4 py-2">
-                        <label
-                            htmlFor="location"
-                            className="block text-sm font-medium text-gray-300 mb-2"
-                        >
-                            Select Location
-                        </label>
-                        <select
-                            id="location"
-                            name="location"
-                            className="w-full px-3 py-2 text-sm bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={selectedLocationId || ""}
-                            onChange={handleLocationChange}
-                        >
-                            {locations.map((location) => (
-                                <option
-                                    key={location.location_id}
-                                    value={location.location_id}
-                                >
-                                    {location.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
+                <div className="px-4 py-2">
+                    <label
+                        htmlFor="location"
+                        className="block text-sm font-medium text-gray-300 mb-2"
+                    >
+                        Select Location
+                    </label>
+                    <select
+                        id="location"
+                        name="location"
+                        className="w-full px-3 py-2 text-sm bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={selectedLocationId || ""}
+                        onChange={handleLocationChange}
+                    >
+                        {locations.map((location) => (
+                            <option
+                                key={location.location_id}
+                                value={location.location_id}
+                            >
+                                {location.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
                 <nav>
                     <button
