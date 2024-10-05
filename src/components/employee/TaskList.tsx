@@ -8,12 +8,6 @@ enum TaskPriority {
     High = 3,
 }
 
-enum TaskStatus {
-    Pending = "open",
-    InProgress = "in progress",
-    Completed = "completed",
-}
-
 interface Task {
     task_id: number;
     task_title: string;
