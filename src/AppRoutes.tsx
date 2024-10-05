@@ -18,7 +18,7 @@ const AppRoutes = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<Login />} />
-                <Route path="/new-user" element={<NewUserLogin />} />
+                <Route path="/newuser" element={<NewUserLogin />} />
                 <Route element={<AdminPrivateRoutes />}>
                     <Route
                         path="/admin/:companyId/:locationId"
