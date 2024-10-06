@@ -6,6 +6,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import CompanyRegistration from "./pages/superadmin/CompanyRegistration";
 import CompanyDashboard from "./pages/superadmin/CompanyDashboard";
 import NewUserLogin from "./pages/NewUserLogin";
+import MaintenanceRequest from "./pages/maintenance/MaintenanceRequest";
 import {
     AdminPrivateRoutes,
     SuperAdminPrivateRoutes,
@@ -19,6 +20,7 @@ const AppRoutes = () => {
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/newuser" element={<NewUserLogin />} />
+                <Route path="/maintenance" element={<MaintenanceRequest />} />
                 <Route element={<AdminPrivateRoutes />}>
                     <Route
                         path="/admin/:companyId/:locationId"

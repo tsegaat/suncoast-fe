@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { createTask } from "../../accessors/AscendHealthAccessor";
 
 enum TaskPriority {
-    LOW = 1,
-    MEDIUM = 2,
-    HIGH = 3,
+    LOW = "low",
+    MEDIUM = "medium",
+    HIGH = "high",
+    URGENT = "urgent",
 }
 
 interface AdminTaskAssignmentProps {
@@ -32,25 +33,27 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
     const [selectedEmployee, setSelectedEmployee] = useState<string>("");
     const [notification, setNotification] = useState({ type: "", message: "" });
     const [isAssigning, setIsAssigning] = useState(false);
+    const [taskPicture, setTaskPicture] = useState<File | null>(null);
 
     const handleAssignTask = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsAssigning(true);
 
         if (newTask && (isPooled || selectedEmployee)) {
+            const formData = new FormData();
+            formData.append("task_title", newTask);
+            formData.append("description", description);
+            formData.append("due_date", dueDate);
+            formData.append("is_pooled", String(isPooled));
+            formData.append("priority", String(priority).toLowerCase());
+            formData.append("location_id", String(locationId));
+            formData.append("assigned_to", isPooled ? "" : selectedEmployee);
+            if (taskPicture) {
+                formData.append("task_picture", taskPicture);
+            }
+
             try {
-                const response = await createTask({
-                    task_title: newTask,
-                    description: description,
-                    due_date: dueDate,
-                    is_pooled: isPooled,
-                    priority: priority,
-                    location_id: locationId,
-                    assigned_to: isPooled
-                        ? undefined
-                        : parseInt(selectedEmployee),
-                    company_id: companyId,
-                });
+                const response = await createTask(formData);
 
                 if (response.ok) {
                     setNotification({
@@ -117,7 +120,7 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                         value={newTask}
                         onChange={(e) => setNewTask(e.target.value)}
                         required
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
                 <div>
@@ -130,8 +133,9 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     <textarea
                         id="description"
                         value={description}
+                        required
                         onChange={(e) => setDescription(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
                 <div>
@@ -145,9 +149,10 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                         type="date"
                         id="dueDate"
                         value={dueDate}
+                        required
                         onChange={(e) => setDueDate(e.target.value)}
                         min={new Date().toISOString().split("T")[0]}
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-indigo-500"
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
                 <div>
@@ -160,16 +165,16 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     <select
                         id="priority"
                         value={priority}
+                        required
                         onChange={(e) =>
-                            setPriority(
-                                parseInt(e.target.value) as TaskPriority
-                            )
+                            setPriority(e.target.value as TaskPriority)
                         }
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option value={TaskPriority.LOW}>Low</option>
                         <option value={TaskPriority.MEDIUM}>Medium</option>
                         <option value={TaskPriority.HIGH}>High</option>
+                        <option value={TaskPriority.URGENT}>Urgent</option>
                     </select>
                 </div>
                 <div>
@@ -197,7 +202,7 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                             onChange={(e) =>
                                 setSelectedEmployee(e.target.value)
                             }
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="">Select an employee</option>
                             {employees.map((employee) => (
@@ -211,10 +216,27 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                         </select>
                     </div>
                 )}
+                <div>
+                    <label
+                        htmlFor="taskPicture"
+                        className="block text-sm font-medium text-gray-700"
+                    >
+                        Task Picture (JPEG/PNG)
+                    </label>
+                    <input
+                        type="file"
+                        id="taskPicture"
+                        accept="image/jpeg, image/png"
+                        onChange={(e) =>
+                            setTaskPicture(e.target.files?.[0] || null)
+                        }
+                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
                 <button
                     type="submit"
                     disabled={isAssigning}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                     {isAssigning ? (
                         <>

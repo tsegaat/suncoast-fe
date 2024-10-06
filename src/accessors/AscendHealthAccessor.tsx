@@ -8,6 +8,9 @@ const userApiUrl =
 const taskApiUrl =
     "https://3k3yxt8gw9.execute-api.us-east-1.amazonaws.com/prod";
 
+const maintenanceApiUrl =
+    "https://p2rgzkr6vg.execute-api.us-east-1.amazonaws.com/prod";
+
 export function createEmployee(userData: any) {
     const authToken = getCookie("token");
 
@@ -121,10 +124,9 @@ export function createTask(taskData: any) {
     return fetch(taskApiUrl + "/tasks/tasks", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify(taskData),
+        body: taskData,
     });
 }
 
@@ -174,5 +176,17 @@ export function updateCompany(companyId: number, companyData: FormData) {
             Authorization: `Bearer ${authToken}`,
         },
         body: companyData,
+    });
+}
+
+export function createMaintenanceRequest(maintenanceData: any) {
+    const authToken = getCookie("token");
+
+    return fetch(maintenanceApiUrl + "/maintReq/maintenance-requests", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${authToken}`,
+        },
+        body: maintenanceData,
     });
 }

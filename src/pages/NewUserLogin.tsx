@@ -2,12 +2,16 @@ import React, { useState, useEffect } from "react";
 import { loginUser, getUser } from "../accessors/AscendHealthAccessor";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 const NewUserLogin: React.FC = () => {
     const [username, setUsername] = useState("");
     const [tempPassword, setTempPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showTempPassword, setShowTempPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const navigate = useNavigate();
@@ -18,6 +22,18 @@ const NewUserLogin: React.FC = () => {
             redirectBasedOnRole(token);
         }
     }, []);
+
+    const toggleTempPasswordVisibility = () => {
+        setShowTempPassword(!showTempPassword);
+    };
+
+    const toggleNewPasswordVisibility = () => {
+        setShowNewPassword(!showNewPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
 
     const redirectBasedOnRole = async (access_token: string) => {
         let role = "";
@@ -143,17 +159,32 @@ const NewUserLogin: React.FC = () => {
                             >
                                 Temporary Password
                             </label>
-                            <input
-                                id="tempPassword"
-                                name="tempPassword"
-                                type="text"
-                                required
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                value={tempPassword}
-                                onChange={(e) =>
-                                    setTempPassword(e.target.value)
-                                }
-                            />
+                            <div className="mt-1 relative">
+                                <input
+                                    id="tempPassword"
+                                    name="tempPassword"
+                                    type={
+                                        showTempPassword ? "text" : "password"
+                                    }
+                                    required
+                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    value={tempPassword}
+                                    onChange={(e) =>
+                                        setTempPassword(e.target.value)
+                                    }
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={toggleTempPasswordVisibility}
+                                >
+                                    {showTempPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -163,15 +194,30 @@ const NewUserLogin: React.FC = () => {
                             >
                                 New Password
                             </label>
-                            <input
-                                id="newPassword"
-                                name="newPassword"
-                                type="text"
-                                required
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
+                            <div className="mt-1 relative">
+                                <input
+                                    id="newPassword"
+                                    name="newPassword"
+                                    type={showNewPassword ? "text" : "password"}
+                                    required
+                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    value={newPassword}
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)
+                                    }
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={toggleNewPasswordVisibility}
+                                >
+                                    {showNewPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -181,17 +227,34 @@ const NewUserLogin: React.FC = () => {
                             >
                                 Confirm New Password
                             </label>
-                            <input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="text"
-                                required
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                value={confirmPassword}
-                                onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
-                                }
-                            />
+                            <div className="mt-1 relative">
+                                <input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    required
+                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    value={confirmPassword}
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={toggleConfirmPasswordVisibility}
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -218,7 +281,7 @@ const NewUserLogin: React.FC = () => {
                                         <path
                                             className="opacity-75"
                                             fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 05.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                         ></path>
                                     </svg>
                                 ) : null}

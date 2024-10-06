@@ -177,12 +177,20 @@ const AdminDashboard: React.FC = () => {
                     <h1 className="text-xl font-semibold text-gray-800">
                         Admin Dashboard
                     </h1>
-                    <button
-                        onClick={handleSignOut}
-                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Sign Out
-                    </button>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => navigate("/maintenance")}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Maintenance Request
+                        </button>
+                        <button
+                            onClick={handleSignOut}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
             </nav>
 

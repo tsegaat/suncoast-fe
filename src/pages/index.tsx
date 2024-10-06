@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { loginUser, getUser } from "../accessors/AscendHealthAccessor";
 import { useNavigate } from "react-router-dom";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import Cookies from "js-cookie";
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const navigate = useNavigate();
@@ -54,6 +56,10 @@ const Login: React.FC = () => {
         } else {
             console.error("Failed to get user details");
         }
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -142,11 +148,11 @@ const Login: React.FC = () => {
                             >
                                 Password
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative">
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     required
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     value={password}
@@ -154,6 +160,17 @@ const Login: React.FC = () => {
                                         setPassword(e.target.value)
                                     }
                                 />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={togglePasswordVisibility}
+                                >
+                                    {showPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
