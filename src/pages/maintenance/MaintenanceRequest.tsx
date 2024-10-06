@@ -34,6 +34,7 @@ const MaintenanceRequestPage: React.FC = () => {
     const [selectedLocation, setSelectedLocation] = useState<number | null>(
         null
     );
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [userLocations, setUserLocations] = useState<Location[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +133,9 @@ const MaintenanceRequestPage: React.FC = () => {
             const response = await createMaintenanceRequest(formData);
 
             if (response.ok) {
-                navigate(-1);
+                setSuccessMessage(
+                    "Maintenance request submitted successfully!"
+                );
             } else {
                 throw new Error("Failed to submit maintenance request");
             }
@@ -329,6 +332,17 @@ const MaintenanceRequestPage: React.FC = () => {
                                         <div className="ml-3">
                                             <h3 className="text-sm font-medium text-red-800">
                                                 {error}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {successMessage && (
+                                <div className="rounded-md bg-green-50 p-4">
+                                    <div className="flex">
+                                        <div className="ml-3">
+                                            <h3 className="text-sm font-medium text-green-800">
+                                                {successMessage}
                                             </h3>
                                         </div>
                                     </div>
