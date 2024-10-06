@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
     PlusIcon,
     CheckIcon,
     TrashIcon,
     DocumentMinusIcon,
-} from "@heroicons/react/20/solid";
+} from "@heroicons/react/24/outline";
+
 interface Task {
     id: number;
     title: string;
@@ -115,174 +116,159 @@ export default function AdminUserManager({
     };
 
     const handleRemoveUser = (name: string) => {
-        // Remove the user
         setUsers(users.filter((user) => user.name !== name));
-        // Remove the tasks associated with the user
         setTasks(tasks.filter((task) => task.user !== name));
-        setSelectedUser(null); // Reset selected user after removal
+        setSelectedUser(null);
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-            {/* Main Content Area */}
-            <div className="flex-1 p-8">
-                <div className="mb-6 text-center">
-                    <h1 className="text-2xl md:text-3xl font-bold mb-2">
+        <div className="bg-gray-100 min-h-screen">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
                         {greeting}, Admin!
                     </h1>
-                    <p className="text-base md:text-lg text-gray-600">
-                        {companyName}
-                    </p>
+                    <p className="text-xl text-gray-600">{companyName}</p>
                 </div>
 
-                {/* Search Bar */}
-                <div className="mb-6">
-                    <div className="flex flex-col md:flex-row gap-4 items-center">
-                        <input
-                            type="text"
-                            placeholder="Enter User Name"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto"
-                        >
-                            <PlusIcon className="h-5 w-5 mr-1" />
-                            Search
-                        </button>
-                    </div>
-                </div>
-
-                {/* User Details Section */}
-                {selectedUser ? (
-                    <div>
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                            <h2 className="text-xl md:text-2xl font-bold text-gray-700">
-                                {selectedUser.name}'s Tasks
-                            </h2>
+                <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                    <div className="p-6">
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                            User Management
+                        </h2>
+                        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
                             <button
-                                onClick={() =>
-                                    handleRemoveUser(selectedUser.name)
-                                }
-                                className="flex items-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 mt-4 md:mt-0"
+                                onClick={handleSearch}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300 ease-in-out flex items-center justify-center"
                             >
-                                <DocumentMinusIcon className="h-5 w-5 mr-1" />
-                                Remove User
+                                <PlusIcon className="h-5 w-5 mr-2" />
+                                Search
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            {/* Completed Tasks */}
-                            <div className="p-6 bg-green-100 rounded-lg shadow-lg">
-                                <h3 className="text-lg md:text-xl font-semibold mb-2 text-green-700">
-                                    Completed Tasks
-                                </h3>
-                                <p className="text-2xl md:text-3xl font-bold">
-                                    {
-                                        tasks.filter(
-                                            (task) =>
-                                                task.user ===
-                                                    selectedUser.name &&
-                                                task.completed
-                                        ).length
-                                    }
-                                </p>
-                            </div>
+                        {selectedUser ? (
+                            <div className="mt-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-2xl font-semibold text-gray-800">
+                                        {selectedUser.name}'s Tasks
+                                    </h3>
+                                    <button
+                                        onClick={() =>
+                                            handleRemoveUser(selectedUser.name)
+                                        }
+                                        className="flex items-center bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-300 ease-in-out"
+                                    >
+                                        <DocumentMinusIcon className="h-5 w-5 mr-2" />
+                                        Remove User
+                                    </button>
+                                </div>
 
-                            {/* Pending Tasks */}
-                            <div className="p-6 bg-yellow-100 rounded-lg shadow-lg">
-                                <h3 className="text-lg md:text-xl font-semibold mb-2 text-yellow-700">
-                                    Pending Tasks
-                                </h3>
-                                <p className="text-2xl md:text-3xl font-bold">
-                                    {
-                                        tasks.filter(
-                                            (task) =>
-                                                task.user ===
-                                                    selectedUser.name &&
-                                                !task.completed
-                                        ).length
-                                    }
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Detailed Task List */}
-                        <div className="mt-10">
-                            <h3 className="text-xl md:text-2xl font-bold mb-4 text-gray-700">
-                                Task List for {selectedUser.name}
-                            </h3>
-                            <div className="space-y-4">
-                                {tasks
-                                    .filter(
-                                        (task) =>
-                                            task.user === selectedUser.name
-                                    )
-                                    .map((task) => (
-                                        <div
-                                            key={task.id}
-                                            className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-white shadow-md rounded-lg"
-                                        >
-                                            <div>
-                                                <p className="text-lg">
-                                                    {task.title}
-                                                </p>
-                                                {task.completed && (
-                                                    <p className="text-sm text-green-500">
-                                                        Completed At:{" "}
-                                                        {task.completedAt}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-2 mt-4 md:mt-0">
-                                                <button
-                                                    onClick={() =>
-                                                        handleTaskCompletion(
-                                                            task.id
-                                                        )
-                                                    }
-                                                    className={`px-4 py-2 text-white rounded-md ${
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div className="bg-green-100 rounded-lg p-6 shadow-md">
+                                        <h4 className="text-lg font-semibold mb-2 text-green-800">
+                                            Completed Tasks
+                                        </h4>
+                                        <p className="text-3xl font-bold text-green-600">
+                                            {
+                                                tasks.filter(
+                                                    (task) =>
+                                                        task.user ===
+                                                            selectedUser.name &&
                                                         task.completed
-                                                            ? "bg-yellow-500"
-                                                            : "bg-green-500"
-                                                    } hover:opacity-90`}
-                                                >
-                                                    {task.completed ? (
-                                                        <>
-                                                            <CheckIcon className="h-5 w-5 inline-block mr-1" />
-                                                            Mark Incomplete
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <CheckIcon className="h-5 w-5 inline-block mr-1" />
-                                                            Mark Complete
-                                                        </>
+                                                ).length
+                                            }
+                                        </p>
+                                    </div>
+                                    <div className="bg-yellow-100 rounded-lg p-6 shadow-md">
+                                        <h4 className="text-lg font-semibold mb-2 text-yellow-800">
+                                            Pending Tasks
+                                        </h4>
+                                        <p className="text-3xl font-bold text-yellow-600">
+                                            {
+                                                tasks.filter(
+                                                    (task) =>
+                                                        task.user ===
+                                                            selectedUser.name &&
+                                                        !task.completed
+                                                ).length
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <h4 className="text-xl font-semibold mb-4 text-gray-800">
+                                    Task List
+                                </h4>
+                                <div className="space-y-4">
+                                    {tasks
+                                        .filter(
+                                            (task) =>
+                                                task.user === selectedUser.name
+                                        )
+                                        .map((task) => (
+                                            <div
+                                                key={task.id}
+                                                className="bg-white p-4 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
+                                            >
+                                                <div>
+                                                    <p className="text-lg font-medium text-gray-800">
+                                                        {task.title}
+                                                    </p>
+                                                    {task.completed && (
+                                                        <p className="text-sm text-green-600">
+                                                            Completed:{" "}
+                                                            {task.completedAt}
+                                                        </p>
                                                     )}
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleRemoveTask(
-                                                            task.id
-                                                        )
-                                                    }
-                                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:opacity-90"
-                                                >
-                                                    <TrashIcon className="h-5 w-5 inline-block mr-1" />
-                                                    Remove
-                                                </button>
+                                                </div>
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() =>
+                                                            handleTaskCompletion(
+                                                                task.id
+                                                            )
+                                                        }
+                                                        className={`px-4 py-2 rounded-md text-white flex items-center ${
+                                                            task.completed
+                                                                ? "bg-yellow-500 hover:bg-yellow-600"
+                                                                : "bg-green-500 hover:bg-green-600"
+                                                        } transition duration-300 ease-in-out`}
+                                                    >
+                                                        <CheckIcon className="h-5 w-5 mr-2" />
+                                                        {task.completed
+                                                            ? "Mark Incomplete"
+                                                            : "Mark Complete"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleRemoveTask(
+                                                                task.id
+                                                            )
+                                                        }
+                                                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center"
+                                                    >
+                                                        <TrashIcon className="h-5 w-5 mr-2" />
+                                                        Remove
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <p className="text-gray-600 text-center py-8">
+                                Search for a user to view their task details.
+                            </p>
+                        )}
                     </div>
-                ) : (
-                    <p className="mt-6 text-gray-500">
-                        Search for a user to view their task details.
-                    </p>
-                )}
+                </div>
             </div>
         </div>
     );

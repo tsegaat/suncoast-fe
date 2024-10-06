@@ -74,7 +74,6 @@ const NewUserLogin: React.FC = () => {
         }
 
         try {
-            // Send both temporary password and new password in a single request
             const loginResponse = await loginUser({
                 username: username.toLowerCase(),
                 password: tempPassword,
@@ -90,12 +89,15 @@ const NewUserLogin: React.FC = () => {
                 });
                 redirectBasedOnRole(loginData.access_token);
             } else {
+                let errorMessage = "An error occurred. Please try again.";
+                if (loginResponse.status === 401) {
+                    errorMessage = "Incorrect username or temporary password.";
+                } else if (loginResponse.status === 500) {
+                    errorMessage = "Server error. Please try again later.";
+                }
                 setMessage({
                     type: "error",
-                    text:
-                        loginResponse.status === 401
-                            ? "Incorrect username or temporary password"
-                            : "An error occurred. Please try again.",
+                    text: errorMessage,
                 });
             }
         } catch (error) {

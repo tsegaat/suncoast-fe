@@ -3,9 +3,10 @@ import { CheckIcon, ArrowPathIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { classNames } from "../../utils/helper";
 
 enum TaskPriority {
-    Low = 1,
-    Medium = 2,
-    High = 3,
+    Low = "low",
+    Medium = "medium",
+    High = "high",
+    Urgent = "urgent",
 }
 
 interface Task {
@@ -38,15 +39,15 @@ interface TaskListProps {
     buttonAction: (id: number) => Promise<void>;
 }
 
-const getPriorityText = (priority: number) => {
+const getPriorityText = (priority: string) => {
     switch (priority) {
-        case 1:
+        case "low":
             return { text: "Low", color: "text-green-600" };
-        case 2:
+        case "medium":
             return { text: "Medium", color: "text-yellow-600" };
-        case 3:
+        case "high":
             return { text: "High", color: "text-orange-600" };
-        case 4:
+        case "urgent":
             return { text: "Urgent", color: "text-red-600" };
         default:
             return { text: "Unknown", color: "text-gray-600" };

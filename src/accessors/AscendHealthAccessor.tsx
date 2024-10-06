@@ -190,3 +190,15 @@ export function createMaintenanceRequest(maintenanceData: any) {
         body: maintenanceData,
     });
 }
+
+export function getPooledTasksWithLocationId(locationId: number) {
+    const authToken = getCookie("token");
+
+    return fetch(taskApiUrl + `/tasks/tasks/pooled/${locationId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+        },
+    });
+}

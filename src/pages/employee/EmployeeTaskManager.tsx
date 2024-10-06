@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tab } from "@headlessui/react";
+import { Tab, TabGroup, TabList, TabPanels, TabPanel } from "@headlessui/react";
 import { classNames } from "../../utils/helper";
 import Cookies from "js-cookie";
 import {
@@ -8,14 +8,15 @@ import {
     getTasksByUserToken,
     updateTaskStatus,
     getCompany,
-    // getPooledTasksWithCompanyIdAndLocationId,
+    getPooledTasksWithLocationId,
 } from "../../accessors/AscendHealthAccessor";
 import TaskList from "../../components/employee/TaskList";
 
 enum TaskPriority {
-    Low = 1,
-    Medium = 2,
-    High = 3,
+    Low = "low",
+    Medium = "medium",
+    High = "high",
+    Urgent = "urgent",
 }
 
 enum TaskStatus {
@@ -103,10 +104,7 @@ export default function EmployeeTaskManager() {
 
                     await fetchTasks();
                     if (selectedLocationId) {
-                        await fetchPooledTasks(
-                            userData.company_id,
-                            selectedLocationId
-                        );
+                        await fetchPooledTasks(selectedLocationId);
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
@@ -125,7 +123,7 @@ export default function EmployeeTaskManager() {
                 (task) => task.location_id === selectedLocationId
             );
             setFilteredTasks(filtered);
-            fetchPooledTasks(currentUser.company_id, selectedLocationId);
+            fetchPooledTasks(selectedLocationId);
         }
     }, [selectedLocationId, tasks, currentUser]);
 
@@ -140,14 +138,11 @@ export default function EmployeeTaskManager() {
         }
     };
 
-    const fetchPooledTasks = async (companyId: number, locationId: number) => {
+    const fetchPooledTasks = async (locationId: number) => {
         try {
-            // const response = await getPooledTasksWithCompanyIdAndLocationId(
-            //     companyId,
-            //     locationId
-            // );
-            // const pooledTasksData = await response.json();
-            setTaskPool([]);
+            const response = await getPooledTasksWithLocationId(locationId);
+            const pooledTasksData = await response.json();
+            setTaskPool(pooledTasksData.tasks);
         } catch (error) {
             console.error("Error fetching pooled tasks:", error);
         }
@@ -310,11 +305,11 @@ export default function EmployeeTaskManager() {
                         </select>
                     </div>
 
-                    <Tab.Group
+                    <TabGroup
                         selectedIndex={selectedIndex}
                         onChange={setSelectedIndex}
                     >
-                        <Tab.List className="flex bg-blue-50 p-1 space-x-1 rounded-lg">
+                        <TabList className="flex bg-blue-50 p-1 space-x-1 rounded-lg">
                             {[
                                 "Pending Tasks",
                                 "Completed Tasks",
@@ -335,9 +330,9 @@ export default function EmployeeTaskManager() {
                                     {category}
                                 </Tab>
                             ))}
-                        </Tab.List>
-                        <Tab.Panels className="mt-2">
-                            <Tab.Panel>
+                        </TabList>
+                        <TabPanels className="mt-2">
+                            <TabPanel>
                                 <TaskList
                                     tasks={filteredTasks.filter(
                                         (task) =>
@@ -350,8 +345,8 @@ export default function EmployeeTaskManager() {
                                     buttonText="Mark as Complete"
                                     buttonAction={handleCompleteTask}
                                 />
-                            </Tab.Panel>
-                            <Tab.Panel>
+                            </TabPanel>
+                            <TabPanel>
                                 <TaskList
                                     tasks={filteredTasks.filter(
                                         (task) =>
@@ -364,8 +359,8 @@ export default function EmployeeTaskManager() {
                                     buttonText="Relist"
                                     buttonAction={handleRelistTask}
                                 />
-                            </Tab.Panel>
-                            <Tab.Panel>
+                            </TabPanel>
+                            <TabPanel>
                                 <TaskList
                                     tasks={taskPool}
                                     handleAddTaskFromPool={
@@ -377,9 +372,9 @@ export default function EmployeeTaskManager() {
                                     buttonText="Add to My Tasks"
                                     buttonAction={handleAddTaskFromPool}
                                 />
-                            </Tab.Panel>
-                        </Tab.Panels>
-                    </Tab.Group>
+                            </TabPanel>
+                        </TabPanels>
+                    </TabGroup>
                 </div>
             </div>
         </div>

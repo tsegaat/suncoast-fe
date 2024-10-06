@@ -47,9 +47,11 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
             formData.append("is_pooled", String(isPooled));
             formData.append("priority", String(priority).toLowerCase());
             formData.append("location_id", String(locationId));
-            formData.append("assigned_to", isPooled ? "" : selectedEmployee);
             if (taskPicture) {
                 formData.append("task_picture", taskPicture);
+            }
+            if (!isPooled) {
+                formData.append("assigned_to", selectedEmployee);
             }
 
             try {
