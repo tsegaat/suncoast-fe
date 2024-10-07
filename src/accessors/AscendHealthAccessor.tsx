@@ -202,3 +202,63 @@ export function getPooledTasksWithLocationId(locationId: number) {
         },
     });
 }
+
+export function getUserByName(first_name: string, last_name: string) {
+    const authToken = getCookie("token");
+
+    return fetch(userApiUrl + `/users/users/search`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+            first_name: first_name,
+            last_name: last_name,
+        }),
+    });
+}
+
+export function getTasksByUserIdAndStatus(user_id: number, status: string) {
+    const authToken = getCookie("token");
+
+    return fetch(
+        taskApiUrl + `/tasks/tasks/by_user/${user_id}/status/${status}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+                user_id: user_id,
+                status: status,
+            }),
+        }
+    );
+}
+
+export function deleteUser(user_id: number) {
+    const authToken = getCookie("token");
+
+    return fetch(userApiUrl + `/users/users/${user_id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+            user_id: user_id,
+        }),
+    });
+}
+
+export function deleteTask(task_id: number) {
+    const authToken = getCookie("token");
+
+    return fetch(taskApiUrl + `/tasks/tasks/${task_id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${authToken}`,
+        },
+    });
+}

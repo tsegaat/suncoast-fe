@@ -7,8 +7,8 @@ if [ $# -ne 2 ]; then
 fi
 
 # Assign arguments to variables
-source_dir="$1"
-dest_dir="$2"
+source_dir="/Users/tsega/Desktop/suncoast-fe/"
+dest_dir="/Users/tsega/Desktop/suncoast-fe/files"
 
 # Check if source directory exists
 if [ ! -d "$source_dir" ]; then
