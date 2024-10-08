@@ -268,14 +268,17 @@ export default function EmployeeTaskManager() {
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="text-white hover:text-blue-200 transition-colors"
+                            className="px-3 py-1 bg-white text-blue-600 rounded hover:bg-blue-100 transition-colors"
                         >
-                            <XMarkIcon className="h-6 w-6" />
+                            Sign Out
                         </button>
                     </div>
-                    <h1 className="text-xl md:text-2xl font-bold">
-                        {greeting}, {currentUser?.first_name || ""}!
-                    </h1>
+                    <div className="text-right">
+                        <h1 className="text-xl md:text-2xl font-bold">
+                            {greeting}, {currentUser?.first_name || ""}!
+                        </h1>
+                        <p className="text-sm md:text-base">{companyName}</p>
+                    </div>
                 </div>
 
                 <div className="p-4 md:p-6">
