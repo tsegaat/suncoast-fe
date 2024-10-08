@@ -108,7 +108,7 @@ const TaskList: React.FC<TaskListProps> = ({
                                         : `${task.description.substring(
                                               0,
                                               100
-                                          )}...`}
+                                          )}`}
                                     {task.description.length > 100 && (
                                         <button
                                             onClick={() =>

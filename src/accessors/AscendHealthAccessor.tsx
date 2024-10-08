@@ -167,7 +167,7 @@ export function getCompany(companyId: number) {
     });
 }
 
-export function updateCompany(companyId: number, companyData: FormData) {
+export function updateCompany(companyId: number, companyUpdateData: FormData) {
     const authToken = getCookie("token");
 
     return fetch(companyApiUrl + `/companies/${companyId}`, {
@@ -175,7 +175,7 @@ export function updateCompany(companyId: number, companyData: FormData) {
         headers: {
             Authorization: `Bearer ${authToken}`,
         },
-        body: companyData,
+        body: companyUpdateData,
     });
 }
 

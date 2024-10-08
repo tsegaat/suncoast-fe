@@ -181,27 +181,29 @@ export default function SuperAdminPage() {
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                         Manage Companies
                     </h2>
-                    <div className="flex gap-4 items-center">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
                         <input
                             type="text"
                             placeholder="Search companies..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="flex-grow px-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <button
-                            onClick={handleSearch}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300 ease-in-out"
-                        >
-                            Search
-                        </button>
-                        <button
-                            onClick={handleCreateCompany}
-                            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 ease-in-out flex items-center"
-                        >
-                            <PlusIcon className="h-5 w-5 mr-2" />
-                            Create Company
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+                            <button
+                                onClick={handleSearch}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300 ease-in-out"
+                            >
+                                Search
+                            </button>
+                            <button
+                                onClick={handleCreateCompany}
+                                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 ease-in-out flex items-center"
+                            >
+                                <PlusIcon className="h-5 w-5 mr-2" />
+                                Create Company
+                            </button>
+                        </div>
                     </div>
                 </div>
 

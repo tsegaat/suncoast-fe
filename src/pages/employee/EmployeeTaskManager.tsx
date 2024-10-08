@@ -11,6 +11,7 @@ import {
     getPooledTasksWithLocationId,
 } from "../../accessors/AscendHealthAccessor";
 import TaskList from "../../components/employee/TaskList";
+import { DocumentTextIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 enum TaskPriority {
     Low = "low",
@@ -249,7 +250,7 @@ export default function EmployeeTaskManager() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
     }
@@ -257,31 +258,28 @@ export default function EmployeeTaskManager() {
     return (
         <div className="min-h-screen bg-gray-100 p-4 md:p-8">
             <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-                <div className="p-8 bg-blue-600 text-white">
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-3xl font-bold">
-                            {greeting}, {currentUser?.first_name || ""}!
-                        </h1>
-                        <button
-                            onClick={handleSignOut}
-                            className="px-4 py-2 bg-white text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <p className="text-lg mt-2">{companyName}</p>
+                <div className="p-6 bg-blue-600 text-white flex justify-between items-center">
+                    <div className="flex items-center space-x-4">
                         <button
                             onClick={() => navigate("/maintenance")}
-                            className="px-4 py-2 mt-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                            className="text-white hover:text-blue-200 transition-colors"
                         >
-                            Maintenance Request
+                            <DocumentTextIcon className="h-6 w-6" />
+                        </button>
+                        <button
+                            onClick={handleSignOut}
+                            className="text-white hover:text-blue-200 transition-colors"
+                        >
+                            <XMarkIcon className="h-6 w-6" />
                         </button>
                     </div>
+                    <h1 className="text-xl md:text-2xl font-bold">
+                        {greeting}, {currentUser?.first_name || ""}!
+                    </h1>
                 </div>
 
-                <div className="p-6">
-                    <div className="mb-6">
+                <div className="p-4 md:p-6">
+                    <div className="mb-4">
                         <label
                             htmlFor="location-select"
                             className="block text-sm font-medium text-gray-700 mb-2"
@@ -309,7 +307,7 @@ export default function EmployeeTaskManager() {
                         selectedIndex={selectedIndex}
                         onChange={setSelectedIndex}
                     >
-                        <TabList className="flex bg-blue-50 p-1 space-x-1 rounded-lg">
+                        <TabList className="flex flex-col md:flex-row bg-blue-50 p-1 space-y-1 md:space-y-0 md:space-x-1 rounded-lg">
                             {[
                                 "Pending Tasks",
                                 "Completed Tasks",

@@ -57,6 +57,7 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
     const [isSearching, setIsSearching] = useState(false);
     const [isLoadingTasks, setIsLoadingTasks] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [searchMessage, setSearchMessage] = useState("");
 
     useEffect(() => {
         setFilteredEmployees(employees);
@@ -68,7 +69,11 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
             const [firstName, lastName] = searchQuery.split(" ");
             const response = await getUserByName(firstName, lastName || "");
             const data = await response.json();
-            setFilteredEmployees(data);
+            if (data.users.length === 0) {
+                setSearchMessage("No users found for that name.");
+            } else {
+                setFilteredEmployees(data.users);
+            }
         } catch (error) {
             console.error("Error searching for users:", error);
         } finally {
@@ -181,7 +186,7 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                             />
                             <button
                                 onClick={handleSearch}
-                                disabled={isSearching}
+                                disabled={isSearching && searchQuery === ""}
                                 className="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600 transition duration-200 w-10 h-10 flex items-center justify-center"
                             >
                                 {isSearching ? (
@@ -192,6 +197,9 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                             </button>
                         </div>
 
+                        {searchMessage && (
+                            <p className="text-red-500 mb-4">{searchMessage}</p>
+                        )}
                         <ul className="divide-y divide-gray-200">
                             {filteredEmployees.map((employee) => (
                                 <li
@@ -259,99 +267,102 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                                 <div className="w-10 h-10 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
                             </div>
                         ) : userTasks.length > 0 ? (
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        {[
-                                            "task_title",
-                                            "description",
-                                            "due_date",
-                                            "priority",
-                                            "status",
-                                        ].map((column) => (
-                                            <th
-                                                key={column}
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                                                onClick={() =>
-                                                    handleSort(
-                                                        column as keyof Task
-                                                    )
-                                                }
-                                            >
-                                                {column.replace("_", " ")}
-                                                {sortColumn === column &&
-                                                    (sortDirection === "asc"
-                                                        ? " ↑"
-                                                        : " ↓")}
-                                            </th>
-                                        ))}
-                                        <th
-                                            scope="col"
-                                            className="relative px-6 py-3"
-                                        >
-                                            <span className="sr-only">
-                                                Actions
-                                            </span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {sortedTasks.map((task) => (
-                                        <tr key={task.task_id}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {task.task_title}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {task.description}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {new Date(
-                                                    task.due_date
-                                                ).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        task.priority === "high"
-                                                            ? "bg-red-100 text-red-800"
-                                                            : task.priority ===
-                                                              "medium"
-                                                            ? "bg-yellow-100 text-yellow-800"
-                                                            : "bg-green-100 text-green-800"
-                                                    }`}
-                                                >
-                                                    {task.priority}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        task.status ===
-                                                        "completed"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-yellow-100 text-yellow-800"
-                                                    }`}
-                                                >
-                                                    {task.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            {[
+                                                "task_title",
+                                                "description",
+                                                "due_date",
+                                                "priority",
+                                                "status",
+                                            ].map((column) => (
+                                                <th
+                                                    key={column}
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                                                     onClick={() =>
-                                                        handleDeleteTask(
-                                                            task.task_id
+                                                        handleSort(
+                                                            column as keyof Task
                                                         )
                                                     }
-                                                    className="text-red-600 hover:text-red-900"
                                                 >
-                                                    <TrashIcon className="h-5 w-5" />
-                                                </button>
-                                            </td>
+                                                    {column.replace("_", " ")}
+                                                    {sortColumn === column &&
+                                                        (sortDirection === "asc"
+                                                            ? " ↑"
+                                                            : " ↓")}
+                                                </th>
+                                            ))}
+                                            <th
+                                                scope="col"
+                                                className="relative px-6 py-3"
+                                            >
+                                                <span className="sr-only">
+                                                    Actions
+                                                </span>
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {sortedTasks.map((task) => (
+                                            <tr key={task.task_id}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {task.task_title}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {task.description}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {new Date(
+                                                        task.due_date
+                                                    ).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                            task.priority ===
+                                                            "high"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : task.priority ===
+                                                                  "medium"
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : "bg-green-100 text-green-800"
+                                                        }`}
+                                                    >
+                                                        {task.priority}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                            task.status ===
+                                                            "completed"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : "bg-yellow-100 text-yellow-800"
+                                                        }`}
+                                                    >
+                                                        {task.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDeleteTask(
+                                                                task.task_id
+                                                            )
+                                                        }
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        <TrashIcon className="h-5 w-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         ) : (
                             <p>No tasks found for this user.</p>
                         )}

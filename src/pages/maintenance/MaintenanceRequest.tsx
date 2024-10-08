@@ -136,6 +136,9 @@ const MaintenanceRequestPage: React.FC = () => {
                 setSuccessMessage(
                     "Maintenance request submitted successfully!"
                 );
+                setTimeout(() => {
+                    navigate(-1);
+                }, 5000);
             } else {
                 throw new Error("Failed to submit maintenance request");
             }

@@ -42,9 +42,10 @@ const EditCompanyModal: React.FC<EditCompanyModalProps> = ({
             formData.append("logo", logo);
         }
         formData.append("locations", JSON.stringify(locations));
+        formData.append("company_id", company.company_id.toString());
 
         try {
-            // await onUpdate(formData);
+            await onUpdate(formData);
             onClose();
         } catch (error) {
             console.error("Error updating company:", error);
