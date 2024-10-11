@@ -15,8 +15,8 @@ import {
 
 interface User {
     user_id: number;
-    fname: string;
-    lname: string;
+    first_name: string;
+    last_name: string;
     email: string;
     role: string;
     company_id: number;
@@ -223,9 +223,9 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                                         <UserIcon className="h-10 w-10 text-gray-400 mr-4" />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{`${capitalize(
-                                                employee.fname
+                                                employee.first_name
                                             )} ${capitalize(
-                                                employee.lname
+                                                employee.last_name
                                             )}`}</p>
                                             <p className="text-sm text-gray-500">
                                                 {employee.email}
@@ -249,7 +249,7 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                             Back to user list
                         </button>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-semibold">{`${selectedUser.fname} ${selectedUser.lname}'s Tasks`}</h3>
+                            <h3 className="text-xl font-semibold">{`${selectedUser.first_name} ${selectedUser.last_name}'s Tasks`}</h3>
                             <button
                                 onClick={handleDeleteClick}
                                 className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 transition duration-200"
@@ -396,8 +396,8 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                         </h3>
                         <p className="text-sm text-gray-600 mb-4 text-center">
                             Are you sure you want to delete{" "}
-                            {selectedUser?.fname} {selectedUser?.lname}? This
-                            action cannot be undone.
+                            {selectedUser?.first_name} {selectedUser?.last_name}
+                            ? This action cannot be undone.
                         </p>
                         <div className="flex justify-end space-x-2">
                             <button
