@@ -21,7 +21,7 @@ phases:
         commands:
             - echo Build completed on `date`
             - echo Uploading build artifacts to S3 in us-east-1...
-            - aws s3 sync build/ s3://taskcurator-fe/ --delete
+            - aws s3 sync build/ s3://www.taskcurator.com/ --delete
 
 cache:
     paths:
