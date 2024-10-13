@@ -212,7 +212,7 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                                     key={employee.user_id}
                                     value={employee.user_id}
                                 >
-                                    {employee.first_name} {employee.last_name}
+                                    {employee.fname} {employee.lname}
                                 </option>
                             ))}
                         </select>
