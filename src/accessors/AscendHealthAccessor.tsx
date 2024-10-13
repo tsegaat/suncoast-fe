@@ -206,16 +206,17 @@ export function getPooledTasksWithLocationId(locationId: number) {
 export function getUserByName(first_name: string, last_name: string) {
     const authToken = getCookie("token");
 
+    const search = {
+        fname: first_name,
+        lname: last_name,
+    };
     return fetch(userApiUrl + `/users/users/search`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({
-            first_name: first_name,
-            last_name: last_name,
-        }),
+        body: JSON.stringify(search),
     });
 }
 
