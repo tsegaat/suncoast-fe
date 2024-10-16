@@ -6,6 +6,8 @@ import CompanyRegistration from "./pages/superadmin/CompanyRegistration";
 import CompanyDashboard from "./pages/superadmin/CompanyDashboard";
 import NewUserLogin from "./pages/NewUserLogin";
 import MaintenanceRequest from "./pages/maintenance/MaintenanceRequest";
+import ForgotPassword from "./pages/forgetPassword/ForgotPassword";
+import ResetPassword from "./pages/forgetPassword/ResetPassword";
 import {
     AdminPrivateRoutes,
     SuperAdminPrivateRoutes,
@@ -18,6 +20,11 @@ const AppRoutes = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route
+                    path="/reset-password/:token"
+                    element={<ResetPassword />}
+                />
                 <Route path="/newuser" element={<NewUserLogin />} />
                 <Route path="/maintenance" element={<MaintenanceRequest />} />
                 <Route element={<AdminPrivateRoutes />}>

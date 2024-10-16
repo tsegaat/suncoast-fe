@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createTask } from "../../accessors/AscendHealthAccessor";
+import { capitalizeFirstLetter } from "../../utils/helper";
 
 enum TaskPriority {
     LOW = "low",
@@ -212,7 +213,8 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                                     key={employee.user_id}
                                     value={employee.user_id}
                                 >
-                                    {employee.fname} {employee.lname}
+                                    {capitalizeFirstLetter(employee.fname)}{" "}
+                                    {capitalizeFirstLetter(employee.lname)}
                                 </option>
                             ))}
                         </select>

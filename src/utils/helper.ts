@@ -9,3 +9,9 @@ export function getCookie(name: string): string | null {
     if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
     return null;
 }
+
+// Capitalize first letter of string if string
+export function capitalizeFirstLetter(str: string): string {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}

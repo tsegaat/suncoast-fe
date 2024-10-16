@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Check if source and destination directories are provided
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <source_directory> <destination_directory>"
-    exit 1
-fi
+
 
 # Assign arguments to variables
 source_dir="/Users/tsega/Desktop/suncoast-fe/"

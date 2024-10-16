@@ -263,3 +263,26 @@ export function deleteTask(task_id: number) {
         },
     });
 }
+
+export function resetPasswordRequest(email: string) {
+    return fetch(userApiUrl + `/users/password/reset`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+    });
+}
+
+export function resetPassword(token: string, new_password: string) {
+    return fetch(userApiUrl + `/users/password/reset/confirm`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            token,
+            new_password,
+        }),
+    });
+}

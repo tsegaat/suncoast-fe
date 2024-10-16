@@ -1,95 +1,60 @@
 import React, { useState, useEffect } from "react";
-import { loginUser, getUser } from "../accessors/AscendHealthAccessor";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { resetPassword } from "../../accessors/AscendHealthAccessor";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import Cookies from "js-cookie";
 
-const Login: React.FC = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
+const ResetPassword: React.FC = () => {
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const navigate = useNavigate();
+    const { token } = useParams<{ token: string }>();
 
     useEffect(() => {
-        const token = Cookies.get("token");
-        if (token) {
-            redirectBasedOnRole(token);
+        console.log(token);
+        if (!token) {
+            navigate("/");
         }
-    }, []);
+    }, [token, navigate]);
 
-    const redirectBasedOnRole = async (access_token: string) => {
-        const userResponse = await getUser(undefined, access_token);
-
-        if (userResponse.ok) {
-            const userData = await userResponse.json();
-            const role = userData.role;
-
-            switch (role) {
-                case "admin":
-                    if (
-                        userData.company_id &&
-                        userData.location_ids &&
-                        userData.location_ids.length > 0
-                    ) {
-                        navigate(
-                            `/admin/${userData.company_id}/${userData.location_ids[0]}`
-                        );
-                    } else {
-                        console.error(
-                            "Admin user lacks company_id or location_ids"
-                        );
-                        navigate("/");
-                    }
-                    break;
-                case "super_admin":
-                    navigate("/companies");
-                    break;
-                case "employee":
-                    navigate("/tasks");
-                    break;
-                default:
-                    Cookies.remove("token");
-                    Cookies.remove("userRole");
-            }
-        } else {
-            console.error("Failed to get user details");
-        }
+    const toggleNewPasswordVisibility = () => {
+        setShowNewPassword(!showNewPassword);
     };
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setMessage({ type: "", text: "" });
-        try {
-            const response = await loginUser({
-                username: email.toLowerCase(),
-                password,
+
+        if (newPassword !== confirmPassword) {
+            setMessage({
+                type: "error",
+                text: "Passwords do not match. Please try again.",
             });
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const response = await resetPassword(token!, newPassword);
             if (response.ok) {
-                const data = await response.json();
-                Cookies.set("token", data.access_token);
                 setMessage({
                     type: "success",
-                    text: "Login successful! Redirecting...",
+                    text: "Password reset successful. Redirecting to login...",
                 });
-                redirectBasedOnRole(data.access_token);
+                setTimeout(() => navigate("/"), 3000);
             } else {
-                setMessage({
-                    type: "error",
-                    text:
-                        response.status === 401
-                            ? "Incorrect username or password"
-                            : "An error occurred. Please try again.",
-                });
+                throw new Error("An error occurred");
             }
         } catch (error) {
-            console.error("Error during login:", error);
+            console.error("Error during password reset:", error);
             setMessage({
                 type: "error",
                 text: "An error occurred. Please try again.",
@@ -103,7 +68,7 @@ const Login: React.FC = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Sign in
+                    Reset Password
                 </h2>
             </div>
 
@@ -123,49 +88,66 @@ const Login: React.FC = () => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label
-                                htmlFor="email"
+                                htmlFor="new-password"
                                 className="block text-sm font-medium text-gray-700"
                             >
-                                Email
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="text"
-                                    required
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Password
+                                New Password
                             </label>
                             <div className="mt-1 relative">
                                 <input
-                                    id="password"
-                                    name="password"
-                                    type={showPassword ? "text" : "password"}
+                                    id="new-password"
+                                    name="new-password"
+                                    type={showNewPassword ? "text" : "password"}
                                     required
                                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={password}
+                                    value={newPassword}
                                     onChange={(e) =>
-                                        setPassword(e.target.value)
+                                        setNewPassword(e.target.value)
                                     }
                                 />
                                 <button
                                     type="button"
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                    onClick={togglePasswordVisibility}
+                                    onClick={toggleNewPasswordVisibility}
                                 >
-                                    {showPassword ? (
+                                    {showNewPassword ? (
+                                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="confirm-password"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Confirm New Password
+                            </label>
+                            <div className="mt-1 relative">
+                                <input
+                                    id="confirm-password"
+                                    name="confirm-password"
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    required
+                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    value={confirmPassword}
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={toggleConfirmPasswordVisibility}
+                                >
+                                    {showConfirmPassword ? (
                                         <EyeSlashIcon className="h-5 w-5 text-gray-400" />
                                     ) : (
                                         <EyeIcon className="h-5 w-5 text-gray-400" />
@@ -202,22 +184,14 @@ const Login: React.FC = () => {
                                         ></path>
                                     </svg>
                                 ) : null}
-                                {isLoading ? "Signing in..." : "Sign in"}
+                                {isLoading ? "Resetting..." : "Reset Password"}
                             </button>
                         </div>
                     </form>
-                    <div className="mt-4 text-right">
-                        <Link
-                            to="/forgot-password"
-                            className="text-sm text-blue-600 hover:text-blue-500"
-                        >
-                            Forgot your password?
-                        </Link>
-                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default Login;
+export default ResetPassword;
