@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { resetPasswordRequest } from "../../accessors/AscendHealthAccessor";
 
 const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
-    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -14,7 +12,7 @@ const ForgotPassword: React.FC = () => {
         setMessage({ type: "", text: "" });
 
         try {
-            const response = await resetPasswordRequest(email);
+            const response = await resetPasswordRequest(email.toLowerCase());
             if (response.ok) {
                 setMessage({
                     type: "success",
