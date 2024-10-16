@@ -22,7 +22,7 @@ enum TaskPriority {
 
 enum TaskStatus {
     Pending = "pending",
-    InProgress = "in progress",
+    InProgress = "in_progress",
     Completed = "completed",
 }
 
