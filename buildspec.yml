@@ -22,6 +22,10 @@ phases:
             - echo Build completed on `date`
             - echo Uploading build artifacts to S3 in us-east-1...
             - aws s3 sync build/ s3://taskcurator.com/ --delete
+            - echo "Invalidating CloudFront cache for taskcurator.com"
+            - aws cloudfront create-invalidation --distribution-id E2BBB0QKJF2QFK --paths "/*"
+            - echo "Invalidating CloudFront cache for www.taskcurator.com"
+            - aws cloudfront create-invalidation --distribution-id ET847UKS4I1TM --paths "/*"
 
 cache:
     paths:
