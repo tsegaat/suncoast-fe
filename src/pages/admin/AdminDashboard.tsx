@@ -102,7 +102,12 @@ const AdminDashboard: React.FC = () => {
                         selectedLocationId
                     );
                     const employeesData = await employeesResponse.json();
-                    setEmployees(employeesData);
+
+                    // Filter out employees with role 'super_admin'
+                    const filteredEmployees = employeesData.filter(
+                        (employee: any) => employee.role !== "super_admin"
+                    );
+                    setEmployees(filteredEmployees);
                 } catch (error) {
                     console.error("Error fetching employees:", error);
                 }
@@ -135,6 +140,7 @@ const AdminDashboard: React.FC = () => {
                         selectedLocationId
                     );
                     const employeesData = await employeesResponse.json();
+
                     setEmployees(employeesData);
                 }
             },

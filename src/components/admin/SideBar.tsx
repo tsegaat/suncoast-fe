@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col items-center space-y-2">
                     <UserCircleIcon className="h-16 w-16 text-white" />
                     <h2 className="text-xl font-bold">
-                        {currentUser?.first_name || "Admin"}
+                        {currentUser?.fname || "Admin"}
                     </h2>
                     <p className="text-sm text-gray-400">{companyName}</p>
                 </div>

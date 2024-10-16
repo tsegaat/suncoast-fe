@@ -69,10 +69,15 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
             const [firstName, lastName] = searchQuery.split(" ");
             const response = await getUserByName(firstName, lastName || "");
             const data = await response.json();
-            if (data.users.length === 0) {
+            // Filter out super admins from the results
+            const filteredUsers = data.users.filter(
+                (user: { role: string }) => user.role !== "super_admin"
+            );
+            if (filteredUsers.length === 0) {
                 setSearchMessage("No users found for that name.");
             } else {
-                setFilteredEmployees(data.users);
+                setSearchMessage("");
+                setFilteredEmployees(filteredUsers);
             }
         } catch (error) {
             console.error("Error searching for users:", error);

@@ -275,7 +275,7 @@ export default function EmployeeTaskManager() {
                     </div>
                     <div className="text-right">
                         <h1 className="text-xl md:text-2xl font-bold">
-                            {greeting}, {currentUser?.first_name || ""}!
+                            {greeting}, {currentUser?.fname || ""}!
                         </h1>
                         <p className="text-sm md:text-base">{companyName}</p>
                     </div>

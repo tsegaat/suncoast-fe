@@ -62,8 +62,8 @@ const AdminCreateEmployee: React.FC<AdminCreateEmployeeProps> = ({
             const response = await createEmployee({
                 email: email.toLowerCase(),
                 role: role,
-                first_name: employeeFirstName,
-                last_name: employeeLastName,
+                fname: employeeFirstName,
+                lname: employeeLastName,
                 company_id: companyId,
                 created_by: currentUser.user_id,
                 location_ids: selectedLocations.map((loc) => loc.location_id),

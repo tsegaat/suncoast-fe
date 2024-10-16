@@ -38,8 +38,8 @@ export function loginUser(userData: LoginRequest) {
 export function getUser(
     userId?: number,
     token?: string,
-    first_name?: string,
-    last_name?: string
+    fname?: string,
+    lname?: string
 ) {
     const authToken = token || getCookie("token");
 
@@ -51,8 +51,8 @@ export function getUser(
         },
         body: JSON.stringify({
             user_id: userId,
-            first_name: first_name,
-            last_name: last_name,
+            fname,
+            lname,
             token: authToken,
         }),
     });
@@ -203,12 +203,12 @@ export function getPooledTasksWithLocationId(locationId: number) {
     });
 }
 
-export function getUserByName(first_name: string, last_name: string) {
+export function getUserByName(fname: string, lname: string) {
     const authToken = getCookie("token");
 
     const search = {
-        fname: first_name,
-        lname: last_name,
+        fname,
+        lname,
     };
     return fetch(userApiUrl + `/users/users/search`, {
         method: "POST",
