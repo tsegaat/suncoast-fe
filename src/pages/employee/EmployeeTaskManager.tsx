@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tab, TabGroup, TabList, TabPanels, TabPanel } from "@headlessui/react";
+import { Tab } from "@headlessui/react";
 import { classNames } from "../../utils/helper";
 import Cookies from "js-cookie";
 import {
@@ -11,7 +11,11 @@ import {
     getPooledTasksWithLocationId,
 } from "../../accessors/AscendHealthAccessor";
 import TaskList from "../../components/employee/TaskList";
-import { DocumentTextIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+    DocumentTextIcon,
+    ArrowLeftOnRectangleIcon,
+    Bars3Icon,
+} from "@heroicons/react/24/outline";
 
 enum TaskPriority {
     Low = "low",
@@ -61,12 +65,29 @@ export default function EmployeeTaskManager() {
         null
     );
     const [relistingTaskId, setRelistingTaskId] = useState<number | null>(null);
-    const [selectedIndex, setSelectedIndex] = useState(0);
     const [locations, setLocations] = useState<Location[]>([]);
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
         null
     );
+    const [isBurgerMenuOpen, setIsBurgerMenuOpen] = useState(false);
+    const burgerMenuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                burgerMenuRef.current &&
+                !burgerMenuRef.current.contains(event.target as Node)
+            ) {
+                setIsBurgerMenuOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -104,9 +125,6 @@ export default function EmployeeTaskManager() {
                     }
 
                     await fetchTasks();
-                    if (selectedLocationId) {
-                        await fetchPooledTasks(selectedLocationId);
-                    }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
                 } finally {
@@ -239,12 +257,21 @@ export default function EmployeeTaskManager() {
         }
     };
 
+    const handleMaintenanceRequest = () => {
+        navigate("/maintenance");
+        setIsBurgerMenuOpen(false);
+    };
+
     const handleSignOut = () => {
         const cookies = Cookies.get();
         Object.keys(cookies).forEach((cookieName) => {
             Cookies.remove(cookieName, { path: "/" });
         });
         navigate("/");
+    };
+
+    const toggleBurgerMenu = () => {
+        setIsBurgerMenuOpen(!isBurgerMenuOpen);
     };
 
     if (isLoading) {
@@ -259,25 +286,37 @@ export default function EmployeeTaskManager() {
         <div className="min-h-screen bg-gray-100 p-4 md:p-8">
             <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
                 <div className="p-6 bg-blue-600 text-white flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={() => navigate("/maintenance")}
-                            className="text-white hover:text-blue-200 transition-colors"
-                        >
-                            <DocumentTextIcon className="h-6 w-6" />
-                        </button>
-                        <button
-                            onClick={handleSignOut}
-                            className="px-3 py-1 bg-white text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                    <div className="text-right">
+                    <div className="text-left">
                         <h1 className="text-xl md:text-2xl font-bold">
                             {greeting}, {currentUser?.fname || ""}!
                         </h1>
                         <p className="text-sm md:text-base">{companyName}</p>
+                    </div>
+                    <div className="relative" ref={burgerMenuRef}>
+                        <button
+                            onClick={toggleBurgerMenu}
+                            className="text-white hover:text-blue-200 transition-colors"
+                        >
+                            <Bars3Icon className="h-6 w-6" />
+                        </button>
+                        {isBurgerMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
+                                <button
+                                    onClick={handleMaintenanceRequest}
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                >
+                                    <DocumentTextIcon className="h-5 w-5 inline-block mr-2" />
+                                    Maintenance Request
+                                </button>
+                                <button
+                                    onClick={handleSignOut}
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                >
+                                    <ArrowLeftOnRectangleIcon className="h-5 w-5 inline-block mr-2" />
+                                    Sign Out
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -306,11 +345,8 @@ export default function EmployeeTaskManager() {
                         </select>
                     </div>
 
-                    <TabGroup
-                        selectedIndex={selectedIndex}
-                        onChange={setSelectedIndex}
-                    >
-                        <TabList className="flex flex-col md:flex-row bg-blue-50 p-1 space-y-1 md:space-y-0 md:space-x-1 rounded-lg">
+                    <Tab.Group>
+                        <Tab.List className="flex flex-col md:flex-row bg-blue-50 p-1 space-y-1 md:space-y-0 md:space-x-1 rounded-lg">
                             {[
                                 "Pending Tasks",
                                 "Completed Tasks",
@@ -331,9 +367,9 @@ export default function EmployeeTaskManager() {
                                     {category}
                                 </Tab>
                             ))}
-                        </TabList>
-                        <TabPanels className="mt-2">
-                            <TabPanel>
+                        </Tab.List>
+                        <Tab.Panels className="mt-2">
+                            <Tab.Panel>
                                 <TaskList
                                     tasks={filteredTasks.filter(
                                         (task) =>
@@ -346,8 +382,8 @@ export default function EmployeeTaskManager() {
                                     buttonText="Mark as Complete"
                                     buttonAction={handleCompleteTask}
                                 />
-                            </TabPanel>
-                            <TabPanel>
+                            </Tab.Panel>
+                            <Tab.Panel>
                                 <TaskList
                                     tasks={filteredTasks.filter(
                                         (task) =>
@@ -360,8 +396,8 @@ export default function EmployeeTaskManager() {
                                     buttonText="Relist"
                                     buttonAction={handleRelistTask}
                                 />
-                            </TabPanel>
-                            <TabPanel>
+                            </Tab.Panel>
+                            <Tab.Panel>
                                 <TaskList
                                     tasks={taskPool}
                                     handleAddTaskFromPool={
@@ -373,9 +409,9 @@ export default function EmployeeTaskManager() {
                                     buttonText="Add to My Tasks"
                                     buttonAction={handleAddTaskFromPool}
                                 />
-                            </TabPanel>
-                        </TabPanels>
-                    </TabGroup>
+                            </Tab.Panel>
+                        </Tab.Panels>
+                    </Tab.Group>
                 </div>
             </div>
         </div>

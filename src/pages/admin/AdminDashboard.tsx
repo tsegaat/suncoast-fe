@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/admin/SideBar";
 import AdminTaskAssignment from "./AdminTaskAssignment";
@@ -10,6 +10,7 @@ import {
     getUsersByLocation,
 } from "../../accessors/AscendHealthAccessor";
 import Cookies from "js-cookie";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 
 const AdminDashboard: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -20,14 +21,31 @@ const AdminDashboard: React.FC = () => {
         null
     );
     const [currentView, setCurrentView] = useState("tasks");
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const sidebarRef = useRef<HTMLDivElement>(null);
     const { companyId, locationId } = useParams<{
         companyId: string;
         locationId: string;
     }>();
     const navigate = useNavigate();
 
-    // New state to store available locations
     const [availableLocations, setAvailableLocations] = useState<any[]>([]);
+
+    // useEffect(() => {
+    //     function handleClickOutside(event: MouseEvent) {
+    //         if (
+    //             sidebarRef.current &&
+    //             !sidebarRef.current.contains(event.target as Node)
+    //         ) {
+    //             setIsMobileSidebarOpen(false);
+    //         }
+    //     }
+
+    //     document.addEventListener("mousedown", handleClickOutside);
+    //     return () => {
+    //         document.removeEventListener("mousedown", handleClickOutside);
+    //     };
+    // }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -102,12 +120,7 @@ const AdminDashboard: React.FC = () => {
                         selectedLocationId
                     );
                     const employeesData = await employeesResponse.json();
-
-                    // Filter out employees with role 'super_admin'
-                    const filteredEmployees = employeesData.filter(
-                        (employee: any) => employee.role !== "super_admin"
-                    );
-                    setEmployees(filteredEmployees);
+                    setEmployees(employeesData);
                 } catch (error) {
                     console.error("Error fetching employees:", error);
                 }
@@ -133,14 +146,13 @@ const AdminDashboard: React.FC = () => {
             currentUser: currentUser,
             companyName: companyData?.name || "",
             setIsLoading: setIsLoading,
-            locations: availableLocations, // Add this line to pass locations
+            locations: availableLocations,
             refreshEmployees: async () => {
                 if (selectedLocationId) {
                     const employeesResponse = await getUsersByLocation(
                         selectedLocationId
                     );
                     const employeesData = await employeesResponse.json();
-
                     setEmployees(employeesData);
                 }
             },
@@ -167,6 +179,10 @@ const AdminDashboard: React.FC = () => {
         navigate("/");
     };
 
+    const handleMaintenanceRequest = () => {
+        navigate("/maintenance");
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -178,24 +194,42 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="flex flex-col h-screen bg-gray-100">
             {/* Navbar */}
-            <nav className="bg-white shadow-md p-4">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="text-xl font-semibold text-gray-800">
-                        Admin Dashboard
-                    </h1>
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => navigate("/maintenance")}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Maintenance Request
-                        </button>
-                        <button
-                            onClick={handleSignOut}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Sign Out
-                        </button>
+            <nav className="bg-white shadow-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between h-16">
+                        <div className="flex">
+                            <div className="flex-shrink-0 flex items-center justify-start">
+                                <img
+                                    src={
+                                        companyData.logo_url ||
+                                        "/default-logo.png"
+                                    }
+                                    alt={`${companyData.name} Logo`}
+                                    className="w-24 h-24 object-contain mx-auto mb-4 mr-2"
+                                />
+                                <span className="text-xl font-semibold text-gray-800">
+                                    {companyData?.name || "Admin Dashboard"}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <span className="text-gray-600 mr-4">
+                                {currentUser?.first_name}{" "}
+                                {currentUser?.last_name}
+                            </span>
+                            <button
+                                onClick={() =>
+                                    setIsMobileSidebarOpen(!isMobileSidebarOpen)
+                                }
+                                className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            >
+                                <span className="sr-only">Open sidebar</span>
+                                <Bars3Icon
+                                    className="h-6 w-6"
+                                    aria-hidden="true"
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -211,10 +245,19 @@ const AdminDashboard: React.FC = () => {
                     locations={availableLocations}
                     selectedLocationId={selectedLocationId}
                     handleLocationChange={handleLocationChange}
+                    handleMaintenanceRequest={handleMaintenanceRequest}
+                    handleSignOut={handleSignOut}
+                    isMobileSidebarOpen={isMobileSidebarOpen}
+                    setIsMobileSidebarOpen={setIsMobileSidebarOpen}
                 />
-                <div className="flex-1 overflow-auto p-8">
-                    {renderCurrentView()}
-                </div>
+                <main className="flex-1 overflow-auto bg-gray-50">
+                    <div className="py-6">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8"></div>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                            <div className="py-4">{renderCurrentView()}</div>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     );

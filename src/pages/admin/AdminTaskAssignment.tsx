@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createTask } from "../../accessors/AscendHealthAccessor";
 import { capitalizeFirstLetter } from "../../utils/helper";
 
@@ -46,12 +46,12 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
             formData.append("description", description);
             formData.append("due_date", dueDate);
             formData.append("is_pooled", String(isPooled));
-            formData.append("priority", String(priority).toLowerCase());
+            formData.append("priority", priority);
             formData.append("location_id", String(locationId));
             if (taskPicture) {
                 formData.append("task_picture", taskPicture);
             }
-            if (!isPooled) {
+            if (!isPooled && selectedEmployee) {
                 formData.append("assigned_to", selectedEmployee);
             }
 
@@ -70,6 +70,7 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     setIsPooled(false);
                     setPriority(TaskPriority.MEDIUM);
                     setSelectedEmployee("");
+                    setTaskPicture(null);
                 } else {
                     setNotification({
                         type: "error",
@@ -136,8 +137,9 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     <textarea
                         id="description"
                         value={description}
-                        required
                         onChange={(e) => setDescription(e.target.value)}
+                        required
+                        rows={4}
                         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
@@ -152,8 +154,8 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                         type="date"
                         id="dueDate"
                         value={dueDate}
-                        required
                         onChange={(e) => setDueDate(e.target.value)}
+                        required
                         min={new Date().toISOString().split("T")[0]}
                         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -168,16 +170,17 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     <select
                         id="priority"
                         value={priority}
-                        required
                         onChange={(e) =>
                             setPriority(e.target.value as TaskPriority)
                         }
+                        required
                         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     >
-                        <option value={TaskPriority.LOW}>Low</option>
-                        <option value={TaskPriority.MEDIUM}>Medium</option>
-                        <option value={TaskPriority.HIGH}>High</option>
-                        <option value={TaskPriority.URGENT}>Urgent</option>
+                        {Object.values(TaskPriority).map((priorityValue) => (
+                            <option key={priorityValue} value={priorityValue}>
+                                {capitalizeFirstLetter(priorityValue)}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div>
@@ -186,13 +189,15 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                             type="checkbox"
                             checked={isPooled}
                             onChange={(e) => setIsPooled(e.target.checked)}
-                            className="form-checkbox"
+                            className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
                         />
-                        <span className="ml-2">Pool Task</span>
+                        <span className="ml-2 text-sm text-gray-700">
+                            Pool Task
+                        </span>
                     </label>
                 </div>
                 {!isPooled && (
-                    <div>
+                    <div className="flex flex-col">
                         <label
                             htmlFor="employee"
                             className="block text-sm font-medium text-gray-700"
@@ -205,6 +210,7 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                             onChange={(e) =>
                                 setSelectedEmployee(e.target.value)
                             }
+                            required={!isPooled}
                             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="">Select an employee</option>

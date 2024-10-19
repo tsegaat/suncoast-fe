@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     UserIcon,
     MagnifyingGlassIcon,
@@ -12,6 +12,7 @@ import {
     deleteUser,
     deleteTask,
 } from "../../accessors/AscendHealthAccessor";
+import { capitalizeFirstLetter } from "../../utils/helper";
 
 interface User {
     user_id: number;
@@ -58,18 +59,35 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
     const [isLoadingTasks, setIsLoadingTasks] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [searchMessage, setSearchMessage] = useState("");
+    const [suggestions, setSuggestions] = useState<User[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setFilteredEmployees(employees);
     }, [employees]);
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                searchRef.current &&
+                !searchRef.current.contains(event.target as Node)
+            ) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     const handleSearch = async () => {
         setIsSearching(true);
         try {
-            const [firstName, lastName] = searchQuery.split(" ");
-            const response = await getUserByName(firstName, lastName || "");
+            const response = await getUserByName(searchQuery, "");
             const data = await response.json();
-            // Filter out super admins from the results
             const filteredUsers = data.users.filter(
                 (user: { role: string }) => user.role !== "super_admin"
             );
@@ -84,6 +102,40 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
         } finally {
             setIsSearching(false);
         }
+    };
+
+    const handleSearchInputChange = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (!query.length) {
+            setFilteredEmployees(employees);
+        }
+        if (query.length > 1) {
+            try {
+                const response = await getUserByName(query, "");
+                const data = await response.json();
+                const filteredSuggestions = data.users.filter(
+                    (user: { role: string }) => user.role !== "super_admin"
+                );
+                setSuggestions(filteredSuggestions);
+                setShowSuggestions(true);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+            }
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleSuggestionClick = (user: User) => {
+        setSearchQuery(`${user.fname} ${user.lname}`);
+        setFilteredEmployees([user]);
+        setSuggestions([]);
+        setShowSuggestions(false);
     };
 
     const handleUserSelect = async (user: User) => {
@@ -188,22 +240,51 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
 
                 {!selectedUser ? (
                     <div className="mb-6">
-                        <div className="flex items-center mb-4">
-                            <input
-                                type="text"
-                                placeholder="Search employees..."
-                                className="flex-grow p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        handleSearch();
-                                    }
-                                }}
-                            />
+                        <div className="flex items-center mb-4" ref={searchRef}>
+                            <div className="relative flex-grow">
+                                <input
+                                    type="text"
+                                    placeholder="Search employees..."
+                                    className="w-full p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={searchQuery}
+                                    onChange={handleSearchInputChange}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleSearch();
+                                        }
+                                    }}
+                                />
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-b-md shadow-lg max-h-60 overflow-auto">
+                                        {suggestions.map((user) => (
+                                            <li
+                                                key={user.user_id}
+                                                className="p-2 hover:bg-blue-50 cursor-pointer flex items-center"
+                                                onClick={() =>
+                                                    handleSuggestionClick(user)
+                                                }
+                                            >
+                                                <UserIcon className="h-5 w-5 text-gray-400 mr-2" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                        {`${capitalizeFirstLetter(
+                                                            user.fname
+                                                        )} ${capitalizeFirstLetter(
+                                                            user.lname
+                                                        )}`}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {user.email}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
                             <button
                                 onClick={handleSearch}
-                                disabled={isSearching && searchQuery === ""}
+                                disabled={isSearching}
                                 className="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600 transition duration-200 w-10 h-10 flex items-center justify-center"
                             >
                                 {isSearching ? (
@@ -227,11 +308,13 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                                     <div className="flex items-center">
                                         <UserIcon className="h-10 w-10 text-gray-400 mr-4" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">{`${capitalize(
-                                                employee.fname
-                                            )} ${capitalize(
-                                                employee.lname
-                                            )}`}</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {`${capitalize(
+                                                    employee.fname
+                                                )} ${capitalize(
+                                                    employee.lname
+                                                )}`}
+                                            </p>
                                             <p className="text-sm text-gray-500">
                                                 {employee.email}
                                             </p>
@@ -344,8 +427,11 @@ const AdminUserManager: React.FC<AdminUserManagerProps> = ({
                                                     <span
                                                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                             task.priority ===
-                                                            "high"
+                                                            "urgent"
                                                                 ? "bg-red-100 text-red-800"
+                                                                : task.priority ===
+                                                                  "high"
+                                                                ? "bg-orange-100 text-orange-800"
                                                                 : task.priority ===
                                                                   "medium"
                                                                 ? "bg-yellow-100 text-yellow-800"

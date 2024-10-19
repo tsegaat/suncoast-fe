@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     UserCircleIcon,
     ClipboardDocumentListIcon,
     UsersIcon,
     UserPlusIcon,
-    ArrowRightIcon,
+    DocumentTextIcon,
+    ArrowLeftOnRectangleIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 
@@ -17,6 +18,10 @@ interface SidebarProps {
     locations: any[];
     selectedLocationId: number | null;
     handleLocationChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+    handleMaintenanceRequest: () => void;
+    handleSignOut: () => void;
+    isMobileSidebarOpen: boolean;
+    setIsMobileSidebarOpen: (isOpen: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -28,105 +33,133 @@ const Sidebar: React.FC<SidebarProps> = ({
     locations,
     selectedLocationId,
     handleLocationChange,
+    handleMaintenanceRequest,
+    handleSignOut,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
 }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
     return (
         <>
-            <button
-                className="md:hidden fixed top-4 left-4 z-20 bg-gray-800 text-white p-2 rounded-md"
-                onClick={toggleSidebar}
-            >
-                {isSidebarOpen ? (
-                    <XMarkIcon className="h-6 w-6" />
-                ) : (
-                    <ArrowRightIcon className="h-6 w-6" />
-                )}
-            </button>
             <div
-                className={`bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
-                    isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                } md:relative md:translate-x-0 transition duration-200 ease-in-out z-10`}
+                className={`fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity ${
+                    isMobileSidebarOpen
+                        ? "opacity-100"
+                        : "opacity-0 pointer-events-none"
+                } md:hidden`}
+                onClick={() => setIsMobileSidebarOpen(false)}
+            ></div>
+
+            <div
+                className={`fixed inset-y-0 left-0 flex flex-col max-w-64 w-full bg-gray-800 transition-transform duration-300 ease-in-out transform z-50 ${
+                    isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                } md:relative md:translate-x-0`}
             >
-                <div className="flex flex-col items-center space-y-2">
-                    <UserCircleIcon className="h-16 w-16 text-white" />
-                    <h2 className="text-xl font-bold">
-                        {currentUser?.fname || "Admin"}
-                    </h2>
-                    <p className="text-sm text-gray-400">{companyName}</p>
+                <div className="flex items-center justify-between flex-shrink-0 px-4 py-4 md:hidden">
+                    <span className="text-lg font-semibold text-white">
+                        {companyName}
+                    </span>
+                    <button
+                        className="text-gray-400 hover:text-white"
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                    >
+                        <XMarkIcon className="h-6 w-6" />
+                    </button>
                 </div>
 
-                <div className="px-4 py-2">
-                    <label
-                        htmlFor="location"
-                        className="block text-sm font-medium text-gray-300 mb-2"
-                    >
-                        Select Location
-                    </label>
-                    <select
-                        id="location"
-                        name="location"
-                        className="w-full px-3 py-2 text-sm bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={selectedLocationId || ""}
-                        onChange={handleLocationChange}
-                    >
-                        {locations.map((location) => (
-                            <option
-                                key={location.location_id}
-                                value={location.location_id}
-                            >
-                                {location.name}
-                            </option>
-                        ))}
-                    </select>
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                    <div className="flex-shrink-0 flex items-center px-4 py-4">
+                        <UserCircleIcon className="h-8 w-8 text-white" />
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-white">
+                                {currentUser?.fname} {currentUser?.lname}
+                            </p>
+                            <p className="text-xs font-medium text-gray-300">
+                                {currentUser?.role}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="px-4 py-2">
+                        <label
+                            htmlFor="location"
+                            className="block text-sm font-medium text-gray-300 mb-2"
+                        >
+                            Select Location
+                        </label>
+                        <select
+                            id="location"
+                            name="location"
+                            className="w-full px-3 py-2 text-sm bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={selectedLocationId || ""}
+                            onChange={handleLocationChange}
+                        >
+                            {locations.map((location) => (
+                                <option
+                                    key={location.location_id}
+                                    value={location.location_id}
+                                >
+                                    {location.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <nav className="flex-1 px-2 py-4 space-y-1">
+                        <button
+                            onClick={() => setCurrentView("tasks")}
+                            className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                                currentView === "tasks"
+                                    ? "bg-gray-900 text-white"
+                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                            }`}
+                        >
+                            <ClipboardDocumentListIcon className="mr-3 h-6 w-6" />
+                            Create a Task
+                        </button>
+
+                        <button
+                            onClick={() => setCurrentView("users")}
+                            className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                                currentView === "users"
+                                    ? "bg-gray-900 text-white"
+                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                            }`}
+                        >
+                            <UsersIcon className="mr-3 h-6 w-6" />
+                            User Management
+                        </button>
+
+                        <button
+                            onClick={() => setCurrentView("create")}
+                            className={`w-full flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                                currentView === "create"
+                                    ? "bg-gray-900 text-white"
+                                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                            }`}
+                        >
+                            <UserPlusIcon className="mr-3 h-6 w-6" />
+                            Create Employee
+                        </button>
+
+                        <button
+                            onClick={handleMaintenanceRequest}
+                            className="w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white"
+                        >
+                            <DocumentTextIcon className="mr-3 h-6 w-6" />
+                            Maintenance Request
+                        </button>
+                    </nav>
                 </div>
 
-                <nav>
+                <div className="flex-shrink-0 flex border-t border-gray-700 p-4">
                     <button
-                        onClick={() => {
-                            setCurrentView("tasks");
-                            setIsSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
-                            currentView === "tasks"
-                                ? "bg-blue-600"
-                                : "hover:bg-gray-700"
-                        }`}
+                        onClick={handleSignOut}
+                        className="w-full flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
-                        <ClipboardDocumentListIcon className="h-5 w-5" />
-                        <span>Create a Task</span>
+                        <ArrowLeftOnRectangleIcon className="mr-3 h-6 w-6" />
+                        Sign Out
                     </button>
-                    <button
-                        onClick={() => {
-                            setCurrentView("users");
-                            setIsSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
-                            currentView === "users"
-                                ? "bg-blue-600"
-                                : "hover:bg-gray-700"
-                        }`}
-                    >
-                        <UsersIcon className="h-5 w-5" />
-                        <span>User Management</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            setCurrentView("create");
-                            setIsSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center space-x-2 px-4 py-2 rounded transition duration-200 ${
-                            currentView === "create"
-                                ? "bg-blue-600"
-                                : "hover:bg-gray-700"
-                        }`}
-                    >
-                        <UserPlusIcon className="h-5 w-5" />
-                        <span>Create Employee</span>
-                    </button>
-                </nav>
+                </div>
             </div>
         </>
     );
