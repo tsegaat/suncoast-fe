@@ -8,6 +8,7 @@ import NewUserLogin from "./pages/NewUserLogin";
 import MaintenanceRequest from "./pages/maintenance/MaintenanceRequest";
 import ForgotPassword from "./pages/forgetPassword/ForgotPassword";
 import ResetPassword from "./pages/forgetPassword/ResetPassword";
+import TaskCuratorLandingPage from "./pages";
 import {
     AdminPrivateRoutes,
     SuperAdminPrivateRoutes,
@@ -19,12 +20,13 @@ const AppRoutes = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Login />} />
+                <Route path="/" element={<TaskCuratorLandingPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route
                     path="/reset-password/:token"
                     element={<ResetPassword />}
                 />
+                <Route path="/login" element={<Login />} />
                 <Route path="/newuser" element={<NewUserLogin />} />
                 <Route path="/maintenance" element={<MaintenanceRequest />} />
                 <Route element={<AdminPrivateRoutes />}>
