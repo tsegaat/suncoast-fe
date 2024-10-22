@@ -31,21 +31,21 @@ const AdminDashboard: React.FC = () => {
 
     const [availableLocations, setAvailableLocations] = useState<any[]>([]);
 
-    // useEffect(() => {
-    //     function handleClickOutside(event: MouseEvent) {
-    //         if (
-    //             sidebarRef.current &&
-    //             !sidebarRef.current.contains(event.target as Node)
-    //         ) {
-    //             setIsMobileSidebarOpen(false);
-    //         }
-    //     }
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                sidebarRef.current &&
+                !sidebarRef.current.contains(event.target as Node)
+            ) {
+                setIsMobileSidebarOpen(false);
+            }
+        }
 
-    //     document.addEventListener("mousedown", handleClickOutside);
-    //     return () => {
-    //         document.removeEventListener("mousedown", handleClickOutside);
-    //     };
-    // }, []);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
