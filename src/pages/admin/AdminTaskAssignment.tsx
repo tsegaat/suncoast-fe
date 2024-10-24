@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createTask } from "../../accessors/AscendHealthAccessor";
 import { capitalizeFirstLetter } from "../../utils/helper";
 
@@ -7,6 +7,12 @@ enum TaskPriority {
     MEDIUM = "medium",
     HIGH = "high",
     URGENT = "urgent",
+}
+
+enum RecurrencePattern {
+    DAILY = "daily",
+    WEEKLY = "weekly",
+    MONTHLY = "monthly",
 }
 
 interface AdminTaskAssignmentProps {
@@ -35,6 +41,10 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
     const [notification, setNotification] = useState({ type: "", message: "" });
     const [isAssigning, setIsAssigning] = useState(false);
     const [taskPicture, setTaskPicture] = useState<File | null>(null);
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurrencePattern, setRecurrencePattern] =
+        useState<RecurrencePattern>(RecurrencePattern.DAILY);
+    const [recurrenceEndDate, setRecurrenceEndDate] = useState<string>("");
 
     const handleAssignTask = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,6 +64,11 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
             if (!isPooled && selectedEmployee) {
                 formData.append("assigned_to", selectedEmployee);
             }
+            formData.append("is_recurring", String(isRecurring));
+            if (isRecurring) {
+                formData.append("recurrence_pattern", recurrencePattern);
+                formData.append("recurrence_end_date", recurrenceEndDate);
+            }
 
             try {
                 const response = await createTask(formData);
@@ -71,6 +86,9 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                     setPriority(TaskPriority.MEDIUM);
                     setSelectedEmployee("");
                     setTaskPicture(null);
+                    setIsRecurring(false);
+                    setRecurrencePattern(RecurrencePattern.DAILY);
+                    setRecurrenceEndDate("");
                 } else {
                     setNotification({
                         type: "error",
@@ -160,6 +178,69 @@ const AdminTaskAssignment: React.FC<AdminTaskAssignmentProps> = ({
                         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
+                <div>
+                    <label className="flex items-center">
+                        <input
+                            type="checkbox"
+                            checked={isRecurring}
+                            onChange={(e) => setIsRecurring(e.target.checked)}
+                            className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                            Recurring Task
+                        </span>
+                    </label>
+                </div>
+                {isRecurring && (
+                    <>
+                        <div>
+                            <label
+                                htmlFor="recurrencePattern"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Recurrence Pattern
+                            </label>
+                            <select
+                                id="recurrencePattern"
+                                value={recurrencePattern}
+                                onChange={(e) =>
+                                    setRecurrencePattern(
+                                        e.target.value as RecurrencePattern
+                                    )
+                                }
+                                required
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                {Object.values(RecurrencePattern).map(
+                                    (pattern) => (
+                                        <option key={pattern} value={pattern}>
+                                            {capitalizeFirstLetter(pattern)}
+                                        </option>
+                                    )
+                                )}
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                htmlFor="recurrenceEndDate"
+                                className="block text-sm font-medium text-gray-700"
+                            >
+                                Recurrence End Date
+                            </label>
+                            <input
+                                type="date"
+                                id="recurrenceEndDate"
+                                value={recurrenceEndDate}
+                                onChange={(e) =>
+                                    setRecurrenceEndDate(e.target.value)
+                                }
+                                required
+                                min={new Date().toISOString().split("T")[0]}
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+                    </>
+                )}
                 <div>
                     <label
                         htmlFor="priority"

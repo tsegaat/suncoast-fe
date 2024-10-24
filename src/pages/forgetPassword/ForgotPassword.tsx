@@ -16,7 +16,7 @@ const ForgotPassword: React.FC = () => {
             if (response.ok) {
                 setMessage({
                     type: "success",
-                    text: "If email exits, password reset link sent to your email.",
+                    text: "If email exists, password reset link sent to your email.",
                 });
             } else if (response.status === 404) {
                 setMessage({
